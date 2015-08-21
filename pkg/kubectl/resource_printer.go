@@ -369,6 +369,7 @@ var componentStatusColumns = []string{"NAME", "STATUS", "MESSAGE", "ERROR"}
 var thirdPartyResourceColumns = []string{"NAME", "DESCRIPTION", "VERSION(S)"}
 var withNamespacePrefixColumns = []string{"NAMESPACE"} // TODO(erictune): print cluster name too.
 var deploymentColumns = []string{"NAME", "UPDATEDREPLICAS", "AGE"}
+var lockColumns = []string{"NAME", "HELDBY", "LAST_RENEWED", "AGE"}
 
 // addDefaultHandlers adds print handlers for default Kubernetes types.
 func (h *HumanReadablePrinter) addDefaultHandlers() {
@@ -406,6 +407,8 @@ func (h *HumanReadablePrinter) addDefaultHandlers() {
 	h.Handler(thirdPartyResourceColumns, printThirdPartyResourceList)
 	h.Handler(deploymentColumns, printDeployment)
 	h.Handler(deploymentColumns, printDeploymentList)
+	h.Handler(lockColumns, printLock)
+	h.Handler(lockColumns, printLockList)
 }
 
 func (h *HumanReadablePrinter) unknown(data []byte, w io.Writer) error {
@@ -1145,6 +1148,36 @@ func printDeployment(deployment *expapi.Deployment, w io.Writer, withNamespace b
 func printDeploymentList(list *expapi.DeploymentList, w io.Writer, withNamespace bool, wide bool, showAll bool, columnLabels []string) error {
 	for _, item := range list.Items {
 		if err := printDeployment(&item, w, withNamespace, wide, showAll, columnLabels); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func printLock(lock *expapi.Lock, w io.Writer, withNamespace bool, wide bool, showAll bool, columnLabels []string) error {
+	namespace := lock.Namespace
+	if withNamespace {
+		if _, err := fmt.Fprintf(w, "%s\t", namespace); err != nil {
+			return err
+		}
+	}
+	if _, err := fmt.Fprintf(
+		w, "%s\t%s\t%s\t%s",
+		lock.Name,
+		lock.Spec.HeldBy,
+		lock.Status.LastRenewalTime,
+		translateTimestamp(lock.CreationTimestamp),
+	); err != nil {
+		return err
+	}
+	_, err := fmt.Fprint(w, appendLabels(lock.Labels, columnLabels))
+	return err
+}
+
+// Sorts and prints the EventList in a human-friendly format.
+func printLockList(list *expapi.LockList, w io.Writer, withNamespace bool, wide bool, showAll bool, columnLabels []string) error {
+	for i := range list.Items {
+		if err := printLock(&list.Items[i], w, withNamespace, wide, showAll, columnLabels); err != nil {
 			return err
 		}
 	}

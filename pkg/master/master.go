@@ -55,6 +55,7 @@ import (
 	endpointsetcd "k8s.io/kubernetes/pkg/registry/endpoint/etcd"
 	eventetcd "k8s.io/kubernetes/pkg/registry/event/etcd"
 	expcontrolleretcd "k8s.io/kubernetes/pkg/registry/experimental/controller/etcd"
+	locketcd "k8s.io/kubernetes/pkg/registry/experimental/lock/etcd"
 	limitrangeetcd "k8s.io/kubernetes/pkg/registry/limitrange/etcd"
 	"k8s.io/kubernetes/pkg/registry/minion"
 	nodeetcd "k8s.io/kubernetes/pkg/registry/minion/etcd"
@@ -449,6 +450,7 @@ func (m *Master) init(c *Config) {
 	serviceStorage := serviceetcd.NewREST(c.DatabaseStorage)
 	m.serviceRegistry = service.NewRegistry(serviceStorage)
 
+
 	var serviceClusterIPRegistry service.RangeRegistry
 	serviceClusterIPAllocator := ipallocator.NewAllocatorCIDRRange(m.serviceClusterIPRange, func(max int, rangeSpec string) allocator.Interface {
 		mem := allocator.NewAllocationMap(max, rangeSpec)
@@ -824,6 +826,7 @@ func (m *Master) expapi(c *Config) *apiserver.APIGroupVersion {
 	thirdPartyResourceStorage := thirdpartyresourceetcd.NewREST(c.ExpDatabaseStorage)
 	daemonStorage := daemonetcd.NewREST(c.ExpDatabaseStorage)
 	deploymentStorage := deploymentetcd.NewREST(c.ExpDatabaseStorage)
+	lockStorage := locketcd.NewStorage(c.DatabaseStorage)
 
 	storage := map[string]rest.Storage{
 		strings.ToLower("replicationControllers"):       controllerStorage.ReplicationController,
@@ -832,6 +835,7 @@ func (m *Master) expapi(c *Config) *apiserver.APIGroupVersion {
 		strings.ToLower("thirdpartyresources"):          thirdPartyResourceStorage,
 		strings.ToLower("daemons"):                      daemonStorage,
 		strings.ToLower("deployments"):                  deploymentStorage,
+		strings.ToLower("locks"):                        lockStorage,
 	}
 
 	return &apiserver.APIGroupVersion{

@@ -347,3 +347,34 @@ type ThirdPartyResourceDataList struct {
 
 	Items []ThirdPartyResourceData `json:"items" description:"items is a list of third party objects"`
 }
+
+// LockSpec is the specification of a resource lock.
+type LockSpec struct {
+	HeldBy       string `json:"heldBy" description:"What entity currently holds the lock"`
+	LeaseSeconds    int64 `json:"leaseSeconds" description:"The lease time for the lock"`
+}
+
+type LockStatus struct {
+	AcquiredTime util.Time `json:"acquiredTime,omitempty" description:"When the lock was first acquired by the current owner"`
+	LastRenewalTime    util.Time `json:"lastRenewalTime,omitempty" description:"The last time the lock's lease was updated"`
+}
+
+// Lock represents the configuration of a resource lock.
+type Lock struct {
+	v1.TypeMeta   `json:",inline"`
+	v1.ObjectMeta `json:"metadata,omitempty" description:"standard object metadata; see http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata"`
+
+	// Spec defines the locks.
+	Spec LockSpec `json:"spec,omitempty" description:"Specification of a lock"`
+
+	// Status represents the current information about a lock.
+	Status LockStatus `json:"status,omitempty" description:"Current status of the lock"`
+}
+
+// LockList is a list of all locks in a namespace.
+type LockList struct {
+	v1.TypeMeta `json:",inline"`
+	v1.ListMeta `json:"metadata,omitempty" description:"standard object metadata; see http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata"`
+
+	Items []Lock `json:"locks" description:"The list of all locks in a namespace"`
+}

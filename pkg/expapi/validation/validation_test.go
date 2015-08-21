@@ -658,3 +658,72 @@ func TestValidateDeployment(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateLock(t *testing.T) {
+	successCases := []expapi.Lock{
+		{
+			ObjectMeta: api.ObjectMeta{
+				Name: "test-lock",
+				Namespace: "default",
+			},
+			Spec: expapi.LockSpec{
+				HeldBy:    "test-app",
+				LeaseSeconds: 5,
+			},
+		},
+	}
+	for _, successCase := range successCases {
+		if errs := ValidateLock(&successCase); len(errs) != 0 {
+			t.Errorf("expected success: %v", errs)
+		}
+	}
+
+	errorCases := map[string]expapi.Lock{
+		"missing Name": {
+			ObjectMeta: api.ObjectMeta{
+				Name: "",
+				Namespace: "default",
+			},
+			Spec: expapi.LockSpec{
+				HeldBy:    "test-app",
+				LeaseSeconds: 5,
+			},
+		},
+		"missing Namespace": {
+			ObjectMeta: api.ObjectMeta{
+				Name: "test-lock",
+				Namespace: "",
+			},
+			Spec: expapi.LockSpec{
+				HeldBy:    "test-app",
+				LeaseSeconds: 5,
+			},
+		},
+		"missing HeldBy": {
+			ObjectMeta: api.ObjectMeta{
+				Name: "test-lock",
+				Namespace: "default",
+			},
+			Spec: expapi.LockSpec{
+				HeldBy:    "",
+				LeaseSeconds: 5,
+			},
+		},
+		"zero LeaseSeconds": {
+			ObjectMeta: api.ObjectMeta{
+				Name: "test-lock",
+				Namespace: "default",
+			},
+			Spec: expapi.LockSpec{
+				HeldBy:    "test-app",
+				LeaseSeconds: 0,
+			},
+		},
+	}
+	for k, v := range errorCases {
+		errs := ValidateLock(&v)
+		if len(errs) == 0 {
+			t.Errorf("expected failure for %s", k)
+		}
+	}
+}
