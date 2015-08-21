@@ -85,6 +85,8 @@ func addKnownTypes() {
 		&ThirdPartyResource{},
 		&ThirdPartyResourceList{},
 		&ThirdPartyResourceData{},
+		&Lock{},
+		&LockList{},
 	)
 	// Legacy names are supported
 	api.Scheme.AddKnownTypeWithName("v1", "Minion", &Node{})
@@ -136,3 +138,5 @@ func (*RangeAllocation) IsAnAPIObject()           {}
 func (*ThirdPartyResource) IsAnAPIObject()        {}
 func (*ThirdPartyResourceList) IsAnAPIObject()    {}
 func (*ThirdPartyResourceData) IsAnAPIObject()    {}
+func (*Lock) IsAnAPIObject()                      {}
+func (*LockList) IsAnAPIObject()                  {}

@@ -2584,3 +2584,28 @@ type ThirdPartyResourceData struct {
 	// The raw JSON data for this data.
 	Data []byte `json:"name,omitempty"`
 }
+
+// LockSpec is the specification of a resource lock.
+type LockSpec struct {
+	HeldBy       string `json:"heldby" description:"What entity currently holds the lock"`
+	LeaseTime    uint64 `json:"duration" description:"The lease time for the lock"`
+	AcquiredTime string `json:"atime,omitempty" description:"When the lock was first acquired by the current owner"`
+	RenewTime    string `json:"rtime,omitempty" description:"The last time the lock's lease was updated"`
+}
+
+// Lock represents the configuration of a resource lock.
+type Lock struct {
+	TypeMeta   `json:",inline"`
+	ObjectMeta `json:"metadata,omitempty" description:"standard object metadata; see http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata"`
+
+	// Spec defines the locks.
+	Spec LockSpec `json:"spec,omitempty" description:"Specification of a lock"`
+}
+
+// LockList is a list of all locks in a namespace.
+type LockList struct {
+	TypeMeta `json:",inline"`
+	ListMeta `json:"metadata,omitempty" description:"standard object metadata; see http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata"`
+
+	Items []Lock `json:"locks" description:"The list of all locks in a namespace"`
+}

@@ -2198,3 +2198,32 @@ type ThirdPartyResourceData struct {
 
 	Data []byte `json:"name,omitempty"`
 }
+
+// LockSpec is the specification of a resource lock.
+type LockSpec struct {
+	// Who currently has the lock.
+	HeldBy string `json:"heldby"`
+	// How long the lock is valid.
+	LeaseTime uint64 `json:"duration"`
+	// When the lock was first acquired.
+	AcquiredTime string `json:"atime,omitempty"`
+	// When the lock was last renewed.
+	RenewTime string `json:"rtime,omitempty"`
+}
+
+// Lock represents the configuration of a resource lock.
+type Lock struct {
+	TypeMeta   `json:",inline"`
+	ObjectMeta `json:"metadata,omitempty"`
+
+	// Spec defines the locks.
+	Spec LockSpec `json:"spec,omitempty"`
+}
+
+// LockList is a list of all locks in a namespace.
+type LockList struct {
+	TypeMeta `json:",inline"`
+	ListMeta `json:"metadata,omitempty"`
+
+	Items []Lock `json:"locks"`
+}
