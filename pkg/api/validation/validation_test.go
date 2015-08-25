@@ -3747,7 +3747,7 @@ func TestValidateLock(t *testing.T) {
 			},
 			Spec: api.LockSpec{
 				HeldBy:    "test-app",
-				LeaseTime: 5,
+				LeaseSeconds: 5,
 			},
 		},
 	}
@@ -3765,7 +3765,7 @@ func TestValidateLock(t *testing.T) {
 			},
 			Spec: api.LockSpec{
 				HeldBy:    "test-app",
-				LeaseTime: 5,
+				LeaseSeconds: 5,
 			},
 		},
 		"missing Namespace": {
@@ -3775,7 +3775,7 @@ func TestValidateLock(t *testing.T) {
 			},
 			Spec: api.LockSpec{
 				HeldBy:    "test-app",
-				LeaseTime: 5,
+				LeaseSeconds: 5,
 			},
 		},
 		"missing HeldBy": {
@@ -3785,17 +3785,17 @@ func TestValidateLock(t *testing.T) {
 			},
 			Spec: api.LockSpec{
 				HeldBy:    "",
-				LeaseTime: 5,
+				LeaseSeconds: 5,
 			},
 		},
-		"missing LeaseTime": {
+		"missing LeaseSeconds": {
 			ObjectMeta: api.ObjectMeta{
 				Name: "test-lock",
 				Namespace: "default",
 			},
 			Spec: api.LockSpec{
 				HeldBy:    "test-app",
-				LeaseTime: 0,
+				LeaseSeconds: 0,
 			},
 		},
 	}

@@ -887,6 +887,9 @@ func convert_api_Lock_To_v1_Lock(in *api.Lock, out *Lock, s conversion.Scope) er
 	if err := convert_api_LockSpec_To_v1_LockSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
+	if err := convert_api_LockStatus_To_v1_LockStatus(&in.Status, &out.Status, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -918,9 +921,20 @@ func convert_api_LockSpec_To_v1_LockSpec(in *api.LockSpec, out *LockSpec, s conv
 		defaulting.(func(*api.LockSpec))(in)
 	}
 	out.HeldBy = in.HeldBy
-	out.LeaseTime = in.LeaseTime
-	out.AcquiredTime = in.AcquiredTime
-	out.RenewTime = in.RenewTime
+	out.LeaseSeconds = in.LeaseSeconds
+	return nil
+}
+
+func convert_api_LockStatus_To_v1_LockStatus(in *api.LockStatus, out *LockStatus, s conversion.Scope) error {
+	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
+		defaulting.(func(*api.LockStatus))(in)
+	}
+	if err := s.Convert(&in.AcquiredTime, &out.AcquiredTime, 0); err != nil {
+		return err
+	}
+	if err := s.Convert(&in.RenewTime, &out.RenewTime, 0); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -3251,6 +3265,9 @@ func convert_v1_Lock_To_api_Lock(in *Lock, out *api.Lock, s conversion.Scope) er
 	if err := convert_v1_LockSpec_To_api_LockSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
+	if err := convert_v1_LockStatus_To_api_LockStatus(&in.Status, &out.Status, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -3282,9 +3299,20 @@ func convert_v1_LockSpec_To_api_LockSpec(in *LockSpec, out *api.LockSpec, s conv
 		defaulting.(func(*LockSpec))(in)
 	}
 	out.HeldBy = in.HeldBy
-	out.LeaseTime = in.LeaseTime
-	out.AcquiredTime = in.AcquiredTime
-	out.RenewTime = in.RenewTime
+	out.LeaseSeconds = in.LeaseSeconds
+	return nil
+}
+
+func convert_v1_LockStatus_To_api_LockStatus(in *LockStatus, out *api.LockStatus, s conversion.Scope) error {
+	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
+		defaulting.(func(*LockStatus))(in)
+	}
+	if err := s.Convert(&in.AcquiredTime, &out.AcquiredTime, 0); err != nil {
+		return err
+	}
+	if err := s.Convert(&in.RenewTime, &out.RenewTime, 0); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -4802,6 +4830,7 @@ func init() {
 		convert_api_LocalObjectReference_To_v1_LocalObjectReference,
 		convert_api_LockList_To_v1_LockList,
 		convert_api_LockSpec_To_v1_LockSpec,
+		convert_api_LockStatus_To_v1_LockStatus,
 		convert_api_Lock_To_v1_Lock,
 		convert_api_NFSVolumeSource_To_v1_NFSVolumeSource,
 		convert_api_NamespaceList_To_v1_NamespaceList,
@@ -4919,6 +4948,7 @@ func init() {
 		convert_v1_LocalObjectReference_To_api_LocalObjectReference,
 		convert_v1_LockList_To_api_LockList,
 		convert_v1_LockSpec_To_api_LockSpec,
+		convert_v1_LockStatus_To_api_LockStatus,
 		convert_v1_Lock_To_api_Lock,
 		convert_v1_NFSVolumeSource_To_api_NFSVolumeSource,
 		convert_v1_NamespaceList_To_api_NamespaceList,

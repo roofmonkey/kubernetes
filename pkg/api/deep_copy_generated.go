@@ -775,6 +775,9 @@ func deepCopy_api_Lock(in Lock, out *Lock, c *conversion.Cloner) error {
 	if err := deepCopy_api_LockSpec(in.Spec, &out.Spec, c); err != nil {
 		return err
 	}
+	if err := deepCopy_api_LockStatus(in.Status, &out.Status, c); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -800,9 +803,17 @@ func deepCopy_api_LockList(in LockList, out *LockList, c *conversion.Cloner) err
 
 func deepCopy_api_LockSpec(in LockSpec, out *LockSpec, c *conversion.Cloner) error {
 	out.HeldBy = in.HeldBy
-	out.LeaseTime = in.LeaseTime
-	out.AcquiredTime = in.AcquiredTime
-	out.RenewTime = in.RenewTime
+	out.LeaseSeconds = in.LeaseSeconds
+	return nil
+}
+
+func deepCopy_api_LockStatus(in LockStatus, out *LockStatus, c *conversion.Cloner) error {
+	if err := deepCopy_util_Time(in.AcquiredTime, &out.AcquiredTime, c); err != nil {
+		return err
+	}
+	if err := deepCopy_util_Time(in.RenewTime, &out.RenewTime, c); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -2235,6 +2246,7 @@ func init() {
 		deepCopy_api_Lock,
 		deepCopy_api_LockList,
 		deepCopy_api_LockSpec,
+		deepCopy_api_LockStatus,
 		deepCopy_api_NFSVolumeSource,
 		deepCopy_api_Namespace,
 		deepCopy_api_NamespaceList,

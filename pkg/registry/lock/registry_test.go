@@ -54,7 +54,7 @@ func TestLockCreate(t *testing.T) {
 		},
 		Spec: api.LockSpec{
 			HeldBy: appName,
-			LeaseTime: testTTL,
+			LeaseSeconds: testTTL,
 		},
 	}
 
@@ -127,7 +127,9 @@ func TestLockUpdate(t *testing.T) {
 		},
 		Spec: api.LockSpec{
 			HeldBy: appName,
-			LeaseTime: testTTL,
+			LeaseSeconds: testTTL,
+		}.
+		Status: api.LockStatus{
 			AcquiredTime: atime,
 			RenewTime: atime,
 		},
@@ -141,7 +143,9 @@ func TestLockUpdate(t *testing.T) {
 		},
 		Spec: api.LockSpec{
 			HeldBy: appName,
-			LeaseTime: testTTL,
+			LeaseSeconds: testTTL,
+		},
+		Status: api.LockStatus{
 			AcquiredTime: atime,
 			RenewTime: utime,
 		},

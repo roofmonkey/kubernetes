@@ -48,7 +48,7 @@ func NewEtcdRegistry(s storage.Interface) generic.Registry {
 			},
 			Storage: s,
 			TTLFunc: func(obj runtime.Object, existin uint64, update bool) (uint64, error) {
-				return obj.(*api.Lock).Spec.LeaseTime, nil
+				return obj.(*api.Lock).Spec.LeaseSeconds, nil
 			},
 		},
 	}

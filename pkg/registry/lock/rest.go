@@ -29,6 +29,7 @@ import (
 	"k8s.io/kubernetes/pkg/registry/generic"
 	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/watch"
+	"k8s.io/kubernetes/pkg/util"
 )
 
 // REST provides the RESTStorage access patterns to work with LimitRange objects.
@@ -63,8 +64,8 @@ func (rs *REST) Create(ctx api.Context, obj runtime.Object) (runtime.Object, err
 		return nil, errors.NewInvalid("lock", lock.Name, errs)
 	}
 	api.FillObjectMetaSystemFields(ctx, &lock.ObjectMeta)
-	lock.Spec.AcquiredTime = time.Now().String()
-	lock.Spec.RenewTime = lock.Spec.AcquiredTime
+	lock.Status.AcquiredTime = util.NewTime(time.Now())
+	lock.Status.RenewTime = lock.Status.AcquiredTime
 
 	err := rs.registry.CreateWithName(ctx, lock.Name, lock)
 	if err != nil {
@@ -98,15 +99,15 @@ func (rs *REST) Update(ctx api.Context, obj runtime.Object) (runtime.Object, boo
 		glog.Errorf("LOCK1 SUCCESFULL UPDATE !!!!!!!!!!!!!!!")
 	}
 	// Preserve the time the lock was first acquired
-	atime := editLock.Spec.AcquiredTime
+//	atime := editLock.Status.AcquiredTime
 
 	// set the editable fields on the existing object
 	editLock.Labels = lock.Labels
 	editLock.ResourceVersion = lock.ResourceVersion
 	editLock.Annotations = lock.Annotations
 	editLock.Spec = lock.Spec
-	editLock.Spec.RenewTime = time.Now().String()
-	editLock.Spec.AcquiredTime = atime
+	editLock.Status.RenewTime = util.NewTime(time.Now())
+//	editLock.Status.AcquiredTime = atime
 
 	if errs := validation.ValidateLock(editLock); len(errs) > 0 {
 		return nil, false, errors.NewInvalid("lock", editLock.Name, errs)
@@ -155,11 +156,11 @@ func (rs *REST) getAttrs(obj runtime.Object) (objLabels labels.Set, objFields fi
 		l = labels.Set{}
 	}
 	return l, fields.Set{
-		"metadata.name": lock.Name,
-		"spec.heldby":   lock.Spec.HeldBy,
-		"spec.duration": string(lock.Spec.LeaseTime),
-		"spec.atime":    lock.Spec.AcquiredTime,
-		"spec.rtime":    lock.Spec.RenewTime,
+		"metadata.name":        lock.Name,
+		"spec.heldBy":          lock.Spec.HeldBy,
+		"spec.leaseSeconds":    string(lock.Spec.LeaseSeconds),
+		"spec.acquiredTime":    lock.Status.AcquiredTime.String(),
+		"spec.renewTime":       lock.Status.RenewTime.String(),
 	}, nil
 }
 

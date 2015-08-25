@@ -38,7 +38,7 @@ func TestLockCreate(t *testing.T) {
 		},
 		Spec: api.LockSpec{
 			HeldBy: "app1",
-			LeaseTime: 30,
+			LeaseSeconds: 30,
 		},
 	}
 	c := &testClient{
@@ -64,7 +64,7 @@ func TestLockGet(t *testing.T) {
 		},
 		Spec: api.LockSpec{
 			HeldBy: "app1",
-			LeaseTime: 30,
+			LeaseSeconds: 30,
 		},
 	}
 	c := &testClient{
@@ -112,7 +112,7 @@ func TestLockUpdate(t *testing.T) {
 		},
 		Spec: api.LockSpec{
 			HeldBy: "app1",
-			LeaseTime: 30,
+			LeaseSeconds: 30,
 		},
 	}
 	c := &testClient{

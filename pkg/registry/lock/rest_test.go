@@ -46,7 +46,7 @@ func testLock(name string, heldby string, ttl uint64, ns string) *api.Lock {
 		},
 		Spec: api.LockSpec{
 			HeldBy: heldby,
-			LeaseTime: ttl,
+			LeaseSeconds: ttl,
 		},
 	}
 }
@@ -112,10 +112,10 @@ func TestRESTCreate(t *testing.T) {
 		if e, a := item.lock, c; !reflect.DeepEqual(e, a) {
 			t.Errorf("diff: %s", util.ObjectDiff(e, a))
 		}
-		if len(c.(*api.Lock).Spec.AcquiredTime) == 0 {
+		if len(c.(*api.Lock).Status.AcquiredTime) == 0 {
 			t.Errorf("AcquiredTime for lock is empty")
 		}
-		if c.(*api.Lock).Spec.AcquiredTime != c.(*api.Lock).Spec.RenewTime {
+		if c.(*api.Lock).Status.AcquiredTime != c.(*api.Lock).Status.RenewTime {
 			t.Errorf("AcquiredTime for lock does not match RenewTime")
 		}
 		// Ensure we implement the interface
@@ -137,8 +137,8 @@ func TestRESTUpdate(t *testing.T) {
 	if e, a := lockA, got; !reflect.DeepEqual(e, a) {
 		t.Errorf("diff: %s", util.ObjectDiff(e, a))
 	}
-	atime := got.(*api.Lock).Spec.AcquiredTime
-	rtime := got.(*api.Lock).Spec.RenewTime
+	atime := got.(*api.Lock).Status.AcquiredTime
+	rtime := got.(*api.Lock).Status.RenewTime
 	if len(atime) == 0 {
 		t.Errorf("AcquiredTime for lock is empty")
 	}
@@ -161,10 +161,10 @@ func TestRESTUpdate(t *testing.T) {
 	if e, a := lockA, got2; !reflect.DeepEqual(e, a) {
 		t.Errorf("diff: %s", util.ObjectDiff(e, a))
 	}
-	if atime != got2.(*api.Lock).Spec.AcquiredTime {
-		t.Fatalf("Lock acquired time changed from %s to %s", atime, got2.(*api.Lock).Spec.AcquiredTime)
+	if atime != got2.(*api.Lock).Status.AcquiredTime {
+		t.Fatalf("Lock acquired time changed from %s to %s", atime, got2.(*api.Lock).Status.AcquiredTime)
 	}
-	if rtime == got2.(*api.Lock).Spec.RenewTime {
+	if rtime == got2.(*api.Lock).Status.RenewTime {
 		t.Fatalf("Lock renew time did not change from %s", rtime)
 	}
 }
@@ -212,7 +212,9 @@ func TestRESTgetAttrs(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: name},
 		Spec: api.LockSpec{
 			HeldBy:          hb,
-			LeaseTime:       uint64(lt),
+			LeaseSeconds:    uint64(lt),
+		}.
+		Status: api.LockStatus{
 			AcquiredTime:    at,
 			RenewTime:       rt,
 		},
@@ -225,11 +227,11 @@ func TestRESTgetAttrs(t *testing.T) {
 		t.Errorf("diff: %s", util.ObjectDiff(e, a))
 	}
 	expect := fields.Set{
-		"metadata.name":  name,
-		"spec.heldby":    hb,
-		"spec.duration":  string(lt),
-		"spec.atime":     at,
-		"spec.rtime":     rt,
+		"metadata.name":        name,
+		"spec.heldBy":          hb,
+		"spec.leaseSeconds":    string(lt),
+		"status.acquiredTime":  at,
+		"status.renewTime":     rt,
 	}
 	if e, a := expect, field; !reflect.DeepEqual(e, a) {
 		t.Errorf("diff: %s", util.ObjectDiff(e, a))
@@ -242,7 +244,9 @@ func TestRESTList(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "lock1"},
 		Spec: api.LockSpec{
 			HeldBy:          "app1",
-			LeaseTime:       uint64(30),
+			LeaseSeconds:    uint64(30),
+		},
+		Status: api.LockStatus{
 			AcquiredTime:    "lock1 app1 at",
 			RenewTime:       "lock1 app1 rt",
 		},
@@ -251,7 +255,9 @@ func TestRESTList(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "lock2"},
 		Spec: api.LockSpec{
 			HeldBy:          "app1",
-			LeaseTime:       uint64(15),
+			LeaseSeconds:    uint64(15),
+		},
+		Status: api.LockStatus{
 			AcquiredTime:    "lock2 app1 at",
 			RenewTime:       "lock2 app1 rt",
 		},
@@ -260,7 +266,9 @@ func TestRESTList(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "lock3"},
 		Spec: api.LockSpec{
 			HeldBy:          "app2",
-			LeaseTime:       uint64(45),
+			LeaseSeconds:    uint64(45),
+		},
+		Status: api.LockStatus{
 			AcquiredTime:    "lock3 app2 at",
 			RenewTime:       "lock3 app2 rt",
 		},
@@ -268,7 +276,7 @@ func TestRESTList(t *testing.T) {
 	reg.ObjectList = &api.LockList{
 		Items: []api.Lock{*lockA, *lockB, *lockC},
 	}
-	got, err := rest.List(api.NewContext(), labels.Everything(), fields.Set{"spec.heldby": "app1"}.AsSelector())
+	got, err := rest.List(api.NewContext(), labels.Everything(), fields.Set{"spec.heldBy": "app1"}.AsSelector())
 	if err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
@@ -285,7 +293,9 @@ func TestRESTWatch(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "lock1"},
 		Spec: api.LockSpec{
 			HeldBy:          "app1",
-			LeaseTime:       uint64(30),
+			LeaseSeconds:    uint64(30),
+		},
+		Status: api.LockStatus{
 			AcquiredTime:    "lock1 app1 at",
 			RenewTime:       "lock1 app1 rt",
 		},

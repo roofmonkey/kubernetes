@@ -1479,9 +1479,9 @@ func describeLock(lock *api.Lock) (string, error) {
 		fmt.Fprintf(out, "Name:\t%s\n", lock.Name)
 		fmt.Fprintf(out, "Namespace:\t%s\n", lock.Namespace)
 		fmt.Fprintf(out, "HeldBy:\t%s\n", lock.Spec.HeldBy)
-		fmt.Fprintf(out, "LeaseTime:\t%d\n", lock.Spec.LeaseTime)
-		fmt.Fprintf(out, "AcquiredTime:\t%s\n", lock.Spec.AcquiredTime)
-		fmt.Fprintf(out, "RenewTime:\t%s\n", lock.Spec.RenewTime)
+		fmt.Fprintf(out, "LeaseSeconds:\t%d\n", lock.Spec.LeaseSeconds)
+		fmt.Fprintf(out, "AcquiredTime:\t%s\n", lock.Status.AcquiredTime.String())
+		fmt.Fprintf(out, "RenewTime:\t%s\n", lock.Status.RenewTime.String())
 		return nil
 	})
 }

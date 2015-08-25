@@ -1859,10 +1859,10 @@ func ValidateLock(lock *api.Lock) errs.ValidationErrorList {
 	allErrs = append(allErrs, ValidateObjectMeta(&lock.ObjectMeta, true, ValidateLockName).Prefix("metadata")...)
 
 	if len(lock.Spec.HeldBy) == 0 {
-		allErrs = append(allErrs, errs.NewFieldRequired("heldby"))
+		allErrs = append(allErrs, errs.NewFieldRequired("heldBy"))
 	}
-	if lock.Spec.LeaseTime == 0 {
-		allErrs = append(allErrs, errs.NewFieldRequired("duration"))
+	if lock.Spec.LeaseSeconds == 0 {
+		allErrs = append(allErrs, errs.NewFieldRequired("leaseSeconds"))
 	}
 	return allErrs
 }
