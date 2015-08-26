@@ -18,38 +18,69 @@ package lock
 
 import (
 	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/registry/generic"
-	etcdgeneric "k8s.io/kubernetes/pkg/registry/generic/etcd"
-	"k8s.io/kubernetes/pkg/runtime"
-	"k8s.io/kubernetes/pkg/storage"
+	"k8s.io/kubernetes/pkg/api/rest"
+	"k8s.io/kubernetes/pkg/fields"
+	"k8s.io/kubernetes/pkg/labels"
+	"k8s.io/kubernetes/pkg/watch"
 )
 
-type registry struct {
-	*etcdgeneric.Etcd
+// Registry is an interface implemented by things that know how to store Lock objects.
+type Registry interface {
+	// ListLocks obtains a list of locks having labels which match selector.
+	ListLocks(ctx api.Context, selector labels.Selector) (*api.LockList, error)
+	// Watch for new/changed/deleted locks
+	WatchLocks(ctx api.Context, label labels.Selector, field fields.Selector, resourceVersion string) (watch.Interface, error)
+	// Get a specific lock
+	GetLock(ctx api.Context, lockName string) (*api.Lock, error)
+	// Create a lock based on a specification.
+	CreateLock(ctx api.Context, lock *api.Lock) error
+	// Update an existing lock
+	UpdateLock(ctx api.Context, lock *api.Lock) error
+	// Delete an existing lock
+	DeleteLock(ctx api.Context, lockName string) error
 }
 
-// NewEtcdRegistry returns a registry which will store Lock in the given etcdStorage
-func NewEtcdRegistry(s storage.Interface) generic.Registry {
-	prefix := "/locks"
+type storage struct {
+	rest.StandardStorage
+}
 
-	return registry{
-		Etcd: &etcdgeneric.Etcd{
-			NewFunc:      func() runtime.Object { return &api.Lock{} },
-			NewListFunc:  func() runtime.Object { return &api.LockList{} },
-			EndpointName: "locks",
-			KeyRootFunc: func(ctx api.Context) string {
-				return etcdgeneric.NamespaceKeyRootFunc(ctx, prefix)
-			},
-			KeyFunc: func(ctx api.Context, name string) (string, error) {
-				return etcdgeneric.NamespaceKeyFunc(ctx, prefix, name)
-			},
-			ObjectNameFunc: func(obj runtime.Object) (string, error) {
-				return obj.(*api.Lock).Name, nil
-			},
-			Storage: s,
-			TTLFunc: func(obj runtime.Object, existin uint64, update bool) (uint64, error) {
-				return obj.(*api.Lock).Spec.LeaseSeconds, nil
-			},
-		},
+// NewRegistry returns a new Registry interface for the given Storage. Any mismatched
+// types will panic.
+func NewRegistry(s rest.StandardStorage) Registry {
+	return &storage{s}
+}
+
+func (s *storage) ListLocks(ctx api.Context, label labels.Selector) (*api.LockList, error) {
+	obj, err := s.List(ctx, label, fields.Everything())
+	if err != nil {
+		return nil, err
 	}
+	return obj.(*api.LockList), nil
+}
+
+func (s *storage) WatchLocks(ctx api.Context, label labels.Selector, field fields.Selector, resourceVersion string) (watch.Interface, error) {
+	return s.Watch(ctx, label, field, resourceVersion)
+}
+
+func (s *storage) GetLock(ctx api.Context, lockName string) (*api.Lock, error) {
+	obj, err := s.Get(ctx, lockName)
+	if err != nil {
+		return nil, err
+	}
+	return obj.(*api.Lock), nil
+}
+
+func (s *storage) CreateLock(ctx api.Context, lockName *api.Lock) error {
+	_, err := s.Create(ctx, lockName)
+	return err
+}
+
+func (s *storage) UpdateLock(ctx api.Context, lockName *api.Lock) error {
+	_, _, err := s.Update(ctx, lockName)
+	return err
+}
+
+func (s *storage) DeleteLock(ctx api.Context, lockName string) error {
+	_, err := s.Delete(ctx, lockName, nil)
+	return err
 }

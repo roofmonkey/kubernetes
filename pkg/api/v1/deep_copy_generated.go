@@ -807,8 +807,12 @@ func deepCopy_v1_LockSpec(in LockSpec, out *LockSpec, c *conversion.Cloner) erro
 }
 
 func deepCopy_v1_LockStatus(in LockStatus, out *LockStatus, c *conversion.Cloner) error {
-	out.AcquiredTime = in.AcquiredTime
-	out.RenewTime = in.RenewTime
+	if err := deepCopy_util_Time(in.AcquiredTime, &out.AcquiredTime, c); err != nil {
+		return err
+	}
+	if err := deepCopy_util_Time(in.RenewTime, &out.RenewTime, c); err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -14,5 +14,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package registry implements the storage and system logic for the core of the api server.
 package lock
