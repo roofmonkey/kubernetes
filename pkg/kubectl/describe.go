@@ -129,6 +129,7 @@ func init() {
 		describeReplicationController,
 		describeNode,
 		describeNamespace,
+		describeLock,
 	)
 	if err != nil {
 		glog.Fatalf("Cannot register describers: %v", err)
@@ -1462,7 +1463,6 @@ type LockDescriber struct {
 }
 
 func (d *LockDescriber) Describe(namespace, name string) (string, error) {
-
 	lock, err := d.client.Experimental().Locks(namespace).Get(name)
 
 	if err != nil {

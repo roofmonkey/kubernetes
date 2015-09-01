@@ -487,7 +487,6 @@ func (m *Master) init(c *Config) {
 		"events":                 eventStorage,
 
 		"limitRanges":                   limitRangeStorage,
-		"locks":                         locketcd.NewStorage(c.DatabaseStorage),
 		"resourceQuotas":                resourceQuotaStorage,
 		"resourceQuotas/status":         resourceQuotaStatusStorage,
 		"namespaces":                    namespaceStorage,
@@ -775,6 +774,7 @@ func (m *Master) expapi(c *Config) *apiserver.APIGroupVersion {
 	thirdPartyResourceStorage := thirdpartyresourceetcd.NewREST(c.ExpDatabaseStorage)
 	daemonStorage := daemonetcd.NewREST(c.ExpDatabaseStorage)
 	deploymentStorage := deploymentetcd.NewREST(c.ExpDatabaseStorage)
+	lockStorage := locketcd.NewStorage(c.DatabaseStorage)
 
 	storage := map[string]rest.Storage{
 		strings.ToLower("replicationControllers"):       controllerStorage.ReplicationController,
@@ -783,6 +783,7 @@ func (m *Master) expapi(c *Config) *apiserver.APIGroupVersion {
 		strings.ToLower("thirdpartyresources"):          thirdPartyResourceStorage,
 		strings.ToLower("daemons"):                      daemonStorage,
 		strings.ToLower("deployments"):                  deploymentStorage,
+		strings.ToLower("locks"):                        lockStorage,
 	}
 
 	return &apiserver.APIGroupVersion{

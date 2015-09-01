@@ -52,7 +52,7 @@ func TestLockCreate(t *testing.T) {
 		Response: Response{StatusCode: 200, Body: lock},
 	}
 
-	response, err := c.Setup().Locks(ns).Create(lock)
+	response, err := c.Setup().Experimental().Locks(ns).Create(lock)
 	c.Validate(t, response, err)
 }
 
@@ -78,7 +78,7 @@ func TestLockGet(t *testing.T) {
 		Response: Response{StatusCode: 200, Body: lock},
 	}
 
-	response, err := c.Setup().Locks(ns).Get(name)
+	response, err := c.Setup().Experimental().Locks(ns).Get(name)
 	c.Validate(t, response, err)
 }
 
@@ -101,7 +101,7 @@ func TestLockList(t *testing.T) {
 		},
 		Response: Response{StatusCode: 200, Body: lockList},
 	}
-	response, err := c.Setup().Locks(ns).List(labels.Everything())
+	response, err := c.Setup().Experimental().Locks(ns).List(labels.Everything())
 	c.Validate(t, response, err)
 }
 
@@ -120,7 +120,7 @@ func TestLockUpdate(t *testing.T) {
 		Request:  testRequest{Method: "PUT", Path: testapi.ResourcePath(getLocksResourceName(), ns, "aprocess"), Query: buildQueryValues(nil)},
 		Response: Response{StatusCode: 200, Body: lock},
 	}
-	response, err := c.Setup().Locks(ns).Update(lock)
+	response, err := c.Setup().Experimental().Locks(ns).Update(lock)
 	c.Validate(t, response, err)
 }
 
@@ -130,7 +130,7 @@ func TestLockDelete(t *testing.T) {
 		Request:  testRequest{Method: "DELETE", Path: testapi.ResourcePath(getLocksResourceName(), ns, "aprocess"), Query: buildQueryValues(nil)},
 		Response: Response{StatusCode: 200},
 	}
-	err := c.Setup().Locks(ns).Delete("aprocess")
+	err := c.Setup().Experimental().Locks(ns).Delete("aprocess")
 	c.Validate(t, nil, err)
 }
 
@@ -142,6 +142,6 @@ func TestLockWatch(t *testing.T) {
 			Query:  url.Values{"name": []string{}}},
 		Response: Response{StatusCode: 200},
 	}
-	_, err := c.Setup().Locks(api.NamespaceAll).Watch(labels.Everything(), fields.Everything(), "")
+	_, err := c.Setup().Experimental().Locks(api.NamespaceAll).Watch(labels.Everything(), fields.Everything(), "")
 	c.Validate(t, nil, err)
 }

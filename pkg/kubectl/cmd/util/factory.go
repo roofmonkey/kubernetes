@@ -109,8 +109,10 @@ func NewFactory(optionalClientConfig clientcmd.ClientConfig) *Factory {
 		clientConfig = DefaultClientConfig(flags)
 	}
 
-	clients := NewClientCache(clientConfig)
-	expClients := NewExperimentalClientCache(clientConfig)
+	config := clientConfig
+	clients := NewClientCache(config)
+	expConfig := clientConfig
+	expClients := NewExperimentalClientCache(expConfig)
 
 	noClientErr := errors.New("could not get client")
 	getBothClients := func(group string, version string) (*client.Client, *client.ExperimentalClient, error) {
