@@ -45,24 +45,13 @@ func newStorage(t *testing.T) (*REST, *tools.FakeEtcdClient) {
 	return NewREST(etcdStorage), fakeClient
 }
 
-// createController is a helper function that returns a controller with the updated resource version.
-func createController(storage *REST, dc expapi.Daemon, t *testing.T) (expapi.Daemon, error) {
-	ctx := api.WithNamespace(api.NewContext(), dc.Namespace)
-	obj, err := storage.Create(ctx, &dc)
-	if err != nil {
-		t.Errorf("Failed to create controller, %v", err)
-	}
-	newDc := obj.(*expapi.Daemon)
-	return *newDc, nil
-}
-
-func validNewDaemon() *expapi.Daemon {
-	return &expapi.Daemon{
+func validNewDeployment() *expapi.Deployment {
+	return &expapi.Deployment{
 		ObjectMeta: api.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
-		Spec: expapi.DaemonSpec{
+		Spec: expapi.DeploymentSpec{
 			Selector: map[string]string{"a": "b"},
 			Template: &api.PodTemplateSpec{
 				ObjectMeta: api.ObjectMeta{
@@ -84,16 +73,16 @@ func validNewDaemon() *expapi.Daemon {
 	}
 }
 
-var validDaemon = *validNewDaemon()
+var validDeployment = *validNewDeployment()
 
 func TestCreate(t *testing.T) {
 	storage, fakeClient := newStorage(t)
 	test := resttest.New(t, storage, fakeClient.SetError)
-	controller := validNewDaemon()
-	controller.ObjectMeta = api.ObjectMeta{}
+	deployment := validNewDeployment()
+	deployment.ObjectMeta = api.ObjectMeta{}
 	test.TestCreate(
 		// valid
-		controller,
+		deployment,
 		func(ctx api.Context, obj runtime.Object) error {
 			return registrytest.SetObject(fakeClient, storage.KeyFunc, ctx, obj)
 		},
@@ -101,10 +90,10 @@ func TestCreate(t *testing.T) {
 			return registrytest.GetObject(fakeClient, storage.KeyFunc, storage.NewFunc, ctx, obj)
 		},
 		// invalid (invalid selector)
-		&expapi.Daemon{
-			Spec: expapi.DaemonSpec{
+		&expapi.Deployment{
+			Spec: expapi.DeploymentSpec{
 				Selector: map[string]string{},
-				Template: validDaemon.Spec.Template,
+				Template: validDeployment.Spec.Template,
 			},
 		},
 	)
@@ -115,7 +104,7 @@ func TestUpdate(t *testing.T) {
 	test := resttest.New(t, storage, fakeClient.SetError)
 	test.TestUpdate(
 		// valid
-		validNewDaemon(),
+		validNewDeployment(),
 		func(ctx api.Context, obj runtime.Object) error {
 			return registrytest.SetObject(fakeClient, storage.KeyFunc, ctx, obj)
 		},
@@ -127,46 +116,46 @@ func TestUpdate(t *testing.T) {
 		},
 		// updateFunc
 		func(obj runtime.Object) runtime.Object {
-			object := obj.(*expapi.Daemon)
+			object := obj.(*expapi.Deployment)
 			object.Spec.Template.Spec.NodeSelector = map[string]string{"c": "d"}
 			return object
 		},
 		// invalid updateFunc
 		func(obj runtime.Object) runtime.Object {
-			object := obj.(*expapi.Daemon)
+			object := obj.(*expapi.Deployment)
 			object.UID = "newUID"
 			return object
 		},
 		func(obj runtime.Object) runtime.Object {
-			object := obj.(*expapi.Daemon)
+			object := obj.(*expapi.Deployment)
 			object.Name = ""
 			return object
 		},
 		func(obj runtime.Object) runtime.Object {
-			object := obj.(*expapi.Daemon)
+			object := obj.(*expapi.Deployment)
 			object.Spec.Template.Spec.RestartPolicy = api.RestartPolicyOnFailure
 			return object
 		},
 		func(obj runtime.Object) runtime.Object {
-			object := obj.(*expapi.Daemon)
+			object := obj.(*expapi.Deployment)
 			object.Spec.Selector = map[string]string{}
 			return object
 		},
 	)
 }
 
-func TestEtcdGetController(t *testing.T) {
+func TestEtcdGet(t *testing.T) {
 	storage, fakeClient := newStorage(t)
 	test := resttest.New(t, storage, fakeClient.SetError)
-	test.TestGet(validNewDaemon())
+	test.TestGet(validNewDeployment())
 }
 
-func TestEtcdListControllers(t *testing.T) {
+func TestEtcdList(t *testing.T) {
 	storage, fakeClient := newStorage(t)
 	test := resttest.New(t, storage, fakeClient.SetError)
 	key := etcdtest.AddPrefix(storage.KeyRootFunc(test.TestContext()))
 	test.TestList(
-		validNewDaemon(),
+		validNewDeployment(),
 		func(objects []runtime.Object) []runtime.Object {
 			return registrytest.SetObjectsForKey(fakeClient, key, objects)
 		},
@@ -175,14 +164,14 @@ func TestEtcdListControllers(t *testing.T) {
 		})
 }
 
-func TestEtcdDeleteController(t *testing.T) {
+func TestEtcdDelete(t *testing.T) {
 	ctx := api.NewDefaultContext()
 	storage, fakeClient := newStorage(t)
-	key, err := storage.KeyFunc(ctx, validDaemon.Name)
+	key, err := storage.KeyFunc(ctx, validDeployment.Name)
 	key = etcdtest.AddPrefix(key)
 
-	fakeClient.Set(key, runtime.EncodeOrDie(testapi.Codec(), validNewDaemon()), 0)
-	obj, err := storage.Delete(ctx, validDaemon.Name, nil)
+	fakeClient.Set(key, runtime.EncodeOrDie(testapi.Codec(), validNewDeployment()), 0)
+	obj, err := storage.Delete(ctx, validDeployment.Name, nil)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
@@ -199,7 +188,7 @@ func TestEtcdDeleteController(t *testing.T) {
 	}
 }
 
-func TestEtcdWatchController(t *testing.T) {
+func TestEtcdWatch(t *testing.T) {
 	ctx := api.NewDefaultContext()
 	storage, fakeClient := newStorage(t)
 	watching, err := storage.Watch(ctx,
@@ -226,14 +215,14 @@ func TestEtcdWatchController(t *testing.T) {
 	watching.Stop()
 }
 
-// Tests that we can watch for the creation of daemon controllers with specified labels.
-func TestEtcdWatchControllersMatch(t *testing.T) {
-	ctx := api.WithNamespace(api.NewDefaultContext(), validDaemon.Namespace)
+// Tests that we can watch for the creation of Deployment with specified labels.
+func TestEtcdWatchWithLabels(t *testing.T) {
+	ctx := api.WithNamespace(api.NewDefaultContext(), validDeployment.Namespace)
 	storage, fakeClient := newStorage(t)
 	fakeClient.ExpectNotFoundGet(etcdgeneric.NamespaceKeyRootFunc(ctx, "/registry/pods"))
 
 	watching, err := storage.Watch(ctx,
-		labels.SelectorFromSet(validDaemon.Spec.Selector),
+		labels.SelectorFromSet(validDeployment.Spec.Selector),
 		fields.Everything(),
 		"1",
 	)
@@ -243,20 +232,20 @@ func TestEtcdWatchControllersMatch(t *testing.T) {
 	fakeClient.WaitForWatchCompletion()
 
 	// The watcher above is waiting for these Labels, on receiving them it should
-	// apply the ControllerStatus decorator, which lists pods, causing a query against
+	// apply the deploymentStatus decorator, which lists pods, causing a query against
 	// the /registry/pods endpoint of the etcd client.
-	controller := &expapi.Daemon{
+	deployment := &expapi.Deployment{
 		ObjectMeta: api.ObjectMeta{
 			Name:      "foo",
-			Labels:    validDaemon.Spec.Selector,
+			Labels:    validDeployment.Spec.Selector,
 			Namespace: "default",
 		},
 	}
-	controllerBytes, _ := testapi.Codec().Encode(controller)
+	deploymentBytes, _ := testapi.Codec().Encode(deployment)
 	fakeClient.WatchResponse <- &etcd.Response{
 		Action: "create",
 		Node: &etcd.Node{
-			Value: string(controllerBytes),
+			Value: string(deploymentBytes),
 		},
 	}
 	select {
@@ -270,9 +259,9 @@ func TestEtcdWatchControllersMatch(t *testing.T) {
 	watching.Stop()
 }
 
-// Tests that we can watch for daemon controllers with specified fields.
-func TestEtcdWatchControllersFields(t *testing.T) {
-	ctx := api.WithNamespace(api.NewDefaultContext(), validDaemon.Namespace)
+// Tests that we can watch for Deployment with specified fields.
+func TestEtcdWatchWithFields(t *testing.T) {
+	ctx := api.WithNamespace(api.NewDefaultContext(), validDeployment.Namespace)
 	storage, fakeClient := newStorage(t)
 	fakeClient.ExpectNotFoundGet(etcdgeneric.NamespaceKeyRootFunc(ctx, "/registry/pods"))
 
@@ -291,19 +280,18 @@ func TestEtcdWatchControllersFields(t *testing.T) {
 		etcdstorage.EtcdCAS,
 		etcdstorage.EtcdDelete}
 
-	controller := &expapi.Daemon{
+	deployment := &expapi.Deployment{
 		ObjectMeta: api.ObjectMeta{
 			Name:      "foo",
-			Labels:    validDaemon.Spec.Selector,
+			Labels:    validDeployment.Spec.Selector,
 			Namespace: "default",
 		},
-		Status: expapi.DaemonStatus{
-			CurrentNumberScheduled: 2,
-			NumberMisscheduled:     1,
-			DesiredNumberScheduled: 4,
+		Status: expapi.DeploymentStatus{
+			Replicas:        1,
+			UpdatedReplicas: 4,
 		},
 	}
-	controllerBytes, _ := testapi.Codec().Encode(controller)
+	deploymentBytes, _ := testapi.Codec().Encode(deployment)
 
 	for expectedResult, fieldSet := range testFieldMap {
 		for _, field := range fieldSet {
@@ -318,7 +306,7 @@ func TestEtcdWatchControllersFields(t *testing.T) {
 				}
 				var prevNode *etcd.Node = nil
 				node := &etcd.Node{
-					Value: string(controllerBytes),
+					Value: string(deploymentBytes),
 				}
 				if action == etcdstorage.EtcdDelete {
 					prevNode = node
@@ -333,7 +321,7 @@ func TestEtcdWatchControllersFields(t *testing.T) {
 				select {
 				case r, ok := <-watching.ResultChan():
 					if expectedResult == FAIL {
-						t.Errorf("Unexpected result from channel %#v", r)
+						t.Errorf("Unexpected result from channel %#v. Field: %v", r, field)
 					}
 					if !ok {
 						t.Errorf("watching channel should be open")
@@ -349,7 +337,7 @@ func TestEtcdWatchControllersFields(t *testing.T) {
 	}
 }
 
-func TestEtcdWatchControllersNotMatch(t *testing.T) {
+func TestEtcdWatchNotMatch(t *testing.T) {
 	ctx := api.NewDefaultContext()
 	storage, fakeClient := newStorage(t)
 	fakeClient.ExpectNotFoundGet(etcdgeneric.NamespaceKeyRootFunc(ctx, "/registry/pods"))
@@ -364,7 +352,7 @@ func TestEtcdWatchControllersNotMatch(t *testing.T) {
 	}
 	fakeClient.WaitForWatchCompletion()
 
-	controller := &expapi.Daemon{
+	deployment := &expapi.Deployment{
 		ObjectMeta: api.ObjectMeta{
 			Name: "bar",
 			Labels: map[string]string{
@@ -372,11 +360,11 @@ func TestEtcdWatchControllersNotMatch(t *testing.T) {
 			},
 		},
 	}
-	controllerBytes, _ := testapi.Codec().Encode(controller)
+	deploymentBytes, _ := testapi.Codec().Encode(deployment)
 	fakeClient.WatchResponse <- &etcd.Response{
 		Action: "create",
 		Node: &etcd.Node{
-			Value: string(controllerBytes),
+			Value: string(deploymentBytes),
 		},
 	}
 
@@ -392,11 +380,11 @@ func TestDelete(t *testing.T) {
 	ctx := api.NewDefaultContext()
 	storage, fakeClient := newStorage(t)
 	test := resttest.New(t, storage, fakeClient.SetError)
-	key, _ := storage.KeyFunc(ctx, validDaemon.Name)
+	key, _ := storage.KeyFunc(ctx, validDeployment.Name)
 	key = etcdtest.AddPrefix(key)
 
 	createFn := func() runtime.Object {
-		dc := validNewDaemon()
+		dc := validNewDeployment()
 		dc.ResourceVersion = "1"
 		fakeClient.Data[key] = tools.EtcdResponseWithError{
 			R: &etcd.Response{
@@ -409,13 +397,12 @@ func TestDelete(t *testing.T) {
 		return dc
 	}
 	gracefulSetFn := func() bool {
-		// If the controller is still around after trying to delete either the delete
+		// If the deployment is still around after trying to delete either the delete
 		// failed, or we're deleting it gracefully.
 		if fakeClient.Data[key].R.Node != nil {
 			return true
 		}
 		return false
 	}
-
 	test.TestDelete(createFn, gracefulSetFn)
 }

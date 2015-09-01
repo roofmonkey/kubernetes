@@ -318,3 +318,38 @@ type DaemonList struct {
 
 	Items []Daemon `json:"items"`
 }
+
+// LockSpec is the specification of a resource lock.
+type LockSpec struct {
+	// Who currently has the lock.
+	HeldBy string `json:"heldBy"`
+	// How long the lock is valid.
+	LeaseSeconds uint64 `json:"leaseSeconds"`
+}
+
+type LockStatus struct {
+	// When the lock was first acquired.
+	AcquiredTime util.Time `json:"acquiredTime,omitempty"`
+	// When the lock was last renewed.
+	RenewTime util.Time `json:"renewTime,omitempty"`
+}
+
+// Lock represents the configuration of a resource lock.
+type Lock struct {
+	api.TypeMeta   `json:",inline"`
+	api.ObjectMeta `json:"metadata,omitempty"`
+
+	// Spec defines the locks.
+	Spec LockSpec `json:"spec,omitempty"`
+
+	// Status represents the current information about a lock.
+	Status LockStatus `json:"status,omitempty"`
+}
+
+// LockList is a list of all locks in a namespace.
+type LockList struct {
+	api.TypeMeta `json:",inline"`
+	api.ListMeta `json:"metadata,omitempty"`
+
+	Items []Lock `json:"locks"`
+}

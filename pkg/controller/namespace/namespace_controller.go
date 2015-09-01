@@ -185,6 +185,10 @@ func deleteAllContent(kubeClient client.Interface, namespace string, before util
 	if err != nil {
 		return estimate, err
 	}
+	err = deleteLocks(kubeClient, namespace)
+	if err != nil {
+		return estimate, err
+	}
 	err = deleteEvents(kubeClient, namespace)
 	if err != nil {
 		return estimate, err
@@ -383,6 +387,20 @@ func deletePersistentVolumeClaims(kubeClient client.Interface, ns string) error 
 	}
 	for i := range items.Items {
 		err := kubeClient.PersistentVolumeClaims(ns).Delete(items.Items[i].Name)
+		if err != nil && !errors.IsNotFound(err) {
+			return err
+		}
+	}
+	return nil
+}
+
+func deleteLocks(kubeClient client.Interface, ns string) error {
+	items, err := kubeClient.Experimental().Locks(ns).List(labels.Everything())
+	if err != nil {
+		return err
+	}
+	for i := range items.Items {
+		err := kubeClient.Experimental().Locks(ns).Delete(items.Items[i].Name)
 		if err != nil && !errors.IsNotFound(err) {
 			return err
 		}

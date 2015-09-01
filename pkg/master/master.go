@@ -17,7 +17,6 @@ limitations under the License.
 package master
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -26,7 +25,6 @@ import (
 	"net/http/pprof"
 	"net/url"
 	"os"
-	rt "runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -51,10 +49,12 @@ import (
 	"k8s.io/kubernetes/pkg/master/ports"
 	"k8s.io/kubernetes/pkg/registry/componentstatus"
 	controlleretcd "k8s.io/kubernetes/pkg/registry/controller/etcd"
+	deploymentetcd "k8s.io/kubernetes/pkg/registry/deployment/etcd"
 	"k8s.io/kubernetes/pkg/registry/endpoint"
 	endpointsetcd "k8s.io/kubernetes/pkg/registry/endpoint/etcd"
 	eventetcd "k8s.io/kubernetes/pkg/registry/event/etcd"
 	expcontrolleretcd "k8s.io/kubernetes/pkg/registry/experimental/controller/etcd"
+	locketcd "k8s.io/kubernetes/pkg/registry/experimental/lock/etcd"
 	limitrangeetcd "k8s.io/kubernetes/pkg/registry/limitrange/etcd"
 	"k8s.io/kubernetes/pkg/registry/minion"
 	nodeetcd "k8s.io/kubernetes/pkg/registry/minion/etcd"
@@ -410,22 +410,8 @@ func (m *Master) HandleFuncWithAuth(pattern string, handler func(http.ResponseWr
 func NewHandlerContainer(mux *http.ServeMux) *restful.Container {
 	container := restful.NewContainer()
 	container.ServeMux = mux
-	container.RecoverHandler(logStackOnRecover)
+	apiserver.InstallRecoverHandler(container)
 	return container
-}
-
-//TODO: Unify with RecoverPanics?
-func logStackOnRecover(panicReason interface{}, httpWriter http.ResponseWriter) {
-	var buffer bytes.Buffer
-	buffer.WriteString(fmt.Sprintf("recover from panic situation: - %v\r\n", panicReason))
-	for i := 2; ; i += 1 {
-		_, file, line, ok := rt.Caller(i)
-		if !ok {
-			break
-		}
-		buffer.WriteString(fmt.Sprintf("    %s:%d\r\n", file, line))
-	}
-	glog.Errorln(buffer.String())
 }
 
 // init initializes master.
@@ -457,6 +443,7 @@ func (m *Master) init(c *Config) {
 
 	serviceStorage := serviceetcd.NewREST(c.DatabaseStorage)
 	m.serviceRegistry = service.NewRegistry(serviceStorage)
+
 
 	var serviceClusterIPRegistry service.RangeRegistry
 	serviceClusterIPAllocator := ipallocator.NewAllocatorCIDRRange(m.serviceClusterIPRange, func(max int, rangeSpec string) allocator.Interface {
@@ -500,6 +487,7 @@ func (m *Master) init(c *Config) {
 		"events":                 eventStorage,
 
 		"limitRanges":                   limitRangeStorage,
+		"locks":                         locketcd.NewStorage(c.DatabaseStorage),
 		"resourceQuotas":                resourceQuotaStorage,
 		"resourceQuotas/status":         resourceQuotaStatusStorage,
 		"namespaces":                    namespaceStorage,
@@ -786,6 +774,7 @@ func (m *Master) expapi(c *Config) *apiserver.APIGroupVersion {
 	autoscalerStorage := horizontalpodautoscaleretcd.NewREST(c.ExpDatabaseStorage)
 	thirdPartyResourceStorage := thirdpartyresourceetcd.NewREST(c.ExpDatabaseStorage)
 	daemonStorage := daemonetcd.NewREST(c.ExpDatabaseStorage)
+	deploymentStorage := deploymentetcd.NewREST(c.ExpDatabaseStorage)
 
 	storage := map[string]rest.Storage{
 		strings.ToLower("replicationControllers"):       controllerStorage.ReplicationController,
@@ -793,6 +782,7 @@ func (m *Master) expapi(c *Config) *apiserver.APIGroupVersion {
 		strings.ToLower("horizontalpodautoscalers"):     autoscalerStorage,
 		strings.ToLower("thirdpartyresources"):          thirdPartyResourceStorage,
 		strings.ToLower("daemons"):                      daemonStorage,
+		strings.ToLower("deployments"):                  deploymentStorage,
 	}
 
 	return &apiserver.APIGroupVersion{
