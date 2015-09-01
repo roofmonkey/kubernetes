@@ -22,6 +22,7 @@ import (
 
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/latest"
+	"k8s.io/kubernetes/pkg/expapi"
 	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/runtime"
@@ -41,13 +42,13 @@ func newEtcdStorage(t *testing.T) (*tools.FakeEtcdClient, storage.Interface) {
 	return fakeEtcdClient, etcdStorage
 }
 
-func testLock(name string, heldby string, ttl uint64, ns string) *api.Lock {
-	return &api.Lock{
+func testLock(name string, heldby string, ttl uint64, ns string) *expapi.Lock {
+	return &expapi.Lock{
 		ObjectMeta: api.ObjectMeta{
 			Name:      name,
 			Namespace: ns,
 		},
-		Spec: api.LockSpec{
+		Spec: expapi.LockSpec{
 			HeldBy: heldby,
 			LeaseSeconds: ttl,
 		},
@@ -57,7 +58,7 @@ func testLock(name string, heldby string, ttl uint64, ns string) *api.Lock {
 func TestRESTCreate(t *testing.T) {
 	table := []struct {
 		ctx   api.Context
-		lock *api.Lock
+		lock *expapi.Lock
 		valid bool
 	}{
 		{
@@ -105,16 +106,16 @@ func TestRESTCreate(t *testing.T) {
 		if !api.HasObjectMetaSystemFieldValues(&item.lock.ObjectMeta) {
 			t.Errorf("storage did not populate object meta field values")
 		}
-		if c.(*api.Lock).Status.AcquiredTime.IsZero() == true {
+		if c.(*expapi.Lock).Status.AcquiredTime.IsZero() == true {
 			t.Fatalf("Lock doesn't have an acquired time set")
 		}
-		if c.(*api.Lock).Status.RenewTime.IsZero() == true {
+		if c.(*expapi.Lock).Status.RenewTime.IsZero() == true {
 			t.Fatalf("Lock doesn't have a renew time set")
 		}
-		if len(c.(*api.Lock).Status.AcquiredTime.String()) == 0 {
+		if len(c.(*expapi.Lock).Status.AcquiredTime.String()) == 0 {
 			t.Errorf("AcquiredTime for lock is empty")
 		}
-		if c.(*api.Lock).Status.AcquiredTime != c.(*api.Lock).Status.RenewTime {
+		if c.(*expapi.Lock).Status.AcquiredTime != c.(*expapi.Lock).Status.RenewTime {
 			t.Errorf("AcquiredTime for lock does not match RenewTime")
 		}
 	}
@@ -133,7 +134,7 @@ func TestRESTUpdate(t *testing.T) {
 		t.Fatalf("Unexpected error %v", err)
 	}
 
-	lock := got.(*api.Lock)
+	lock := got.(*expapi.Lock)
 	lock.Spec.HeldBy = "app2"
 	_, _, err = rest.Update(api.NewDefaultContext(), lock)
 	if err == nil {
@@ -147,26 +148,26 @@ func TestRESTUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
-	if update.(*api.Lock).Status.AcquiredTime.IsZero() == true {
+	if update.(*expapi.Lock).Status.AcquiredTime.IsZero() == true {
 		t.Fatalf("Updated lock doesn't have an acquired time set")
 	}
-	if update.(*api.Lock).Status.RenewTime.IsZero() == true {
+	if update.(*expapi.Lock).Status.RenewTime.IsZero() == true {
 		t.Fatalf("Updated lock doesn't have a renew time set")
 	}
 	got2, err := rest.Get(api.NewDefaultContext(), lockSpec.Name)
 	if err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
-	if got2.(*api.Lock).Status.AcquiredTime.IsZero() == true {
+	if got2.(*expapi.Lock).Status.AcquiredTime.IsZero() == true {
 		t.Fatalf("lock gotten after update doesn't have an acquired time set")
 	}
-	if atime != got2.(*api.Lock).Status.AcquiredTime {
-		t.Fatalf("Lock acquired time changed from %s to %s", atime, got2.(*api.Lock).Status.AcquiredTime)
+	if atime != got2.(*expapi.Lock).Status.AcquiredTime {
+		t.Fatalf("Lock acquired time changed from %s to %s", atime, got2.(*expapi.Lock).Status.AcquiredTime)
 	}
-	if got2.(*api.Lock).Status.RenewTime.IsZero() == true {
+	if got2.(*expapi.Lock).Status.RenewTime.IsZero() == true {
 		t.Fatalf("lock gotten after update doesn't have a renew time set")
 	}
-	if rtime == got2.(*api.Lock).Status.RenewTime {
+	if rtime == got2.(*expapi.Lock).Status.RenewTime {
 		t.Fatalf("Lock renew time did not change from %s", rtime)
 	}
 }
@@ -197,7 +198,7 @@ func TestRESTGet(t *testing.T) {
 		t.Fatalf("Unexpected error %v", err)
 	}
 	got, err := rest.Get(api.NewDefaultContext(), lock.Name)
-	gotLock := got.(*api.Lock)
+	gotLock := got.(*expapi.Lock)
 	if err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
@@ -222,23 +223,23 @@ func TestRESTList(t *testing.T) {
 	ctx := api.NewDefaultContext()
 	key := rest.KeyRootFunc(ctx)
 	key = etcdtest.AddPrefix(key)
-	lockA := &api.Lock{
+	lockA := &expapi.Lock{
 		ObjectMeta: api.ObjectMeta{Name: "lock1"},
-		Spec: api.LockSpec{
+		Spec: expapi.LockSpec{
 			HeldBy:          "app1",
 			LeaseSeconds:    uint64(30),
 		},
 	}
-	lockB := &api.Lock{
+	lockB := &expapi.Lock{
 		ObjectMeta: api.ObjectMeta{Name: "lock2"},
-		Spec: api.LockSpec{
+		Spec: expapi.LockSpec{
 			HeldBy:          "app1",
 			LeaseSeconds:    uint64(15),
 		},
 	}
-	lockC := &api.Lock{
+	lockC := &expapi.Lock{
 		ObjectMeta: api.ObjectMeta{Name: "lock3"},
-		Spec: api.LockSpec{
+		Spec: expapi.LockSpec{
 			HeldBy:          "app2",
 			LeaseSeconds:    uint64(45),
 		},
@@ -265,7 +266,7 @@ func TestRESTList(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error %v", err)
 	}
-	got := gotObj.(*api.LockList)
+	got := gotObj.(*expapi.LockList)
 	if len(got.Items) != 2 {
 		t.Errorf("Expected 2 list objects, got %d", len(got.Items))
 	}
@@ -291,18 +292,18 @@ func TestRESTWatch(t *testing.T) {
 	}
 	fakeEtcdClient.WaitForWatchCompletion()
 
-	lockA := &api.Lock{
+	lockA := &expapi.Lock{
 		ObjectMeta: api.ObjectMeta{
 			Name: "lock1",
 			Labels: map[string]string{
 				"name": "lock1",
 			},
 		},
-		Spec: api.LockSpec{
+		Spec: expapi.LockSpec{
 			HeldBy:          "app1",
 			LeaseSeconds:    uint64(30),
 		},
-		Status: api.LockStatus{
+		Status: expapi.LockStatus{
 			AcquiredTime:    util.NewTime(time.Now()),
 			RenewTime:       util.NewTime(time.Now()),
 		},

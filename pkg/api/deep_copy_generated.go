@@ -765,58 +765,6 @@ func deepCopy_api_LocalObjectReference(in LocalObjectReference, out *LocalObject
 	return nil
 }
 
-func deepCopy_api_Lock(in Lock, out *Lock, c *conversion.Cloner) error {
-	if err := deepCopy_api_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
-		return err
-	}
-	if err := deepCopy_api_ObjectMeta(in.ObjectMeta, &out.ObjectMeta, c); err != nil {
-		return err
-	}
-	if err := deepCopy_api_LockSpec(in.Spec, &out.Spec, c); err != nil {
-		return err
-	}
-	if err := deepCopy_api_LockStatus(in.Status, &out.Status, c); err != nil {
-		return err
-	}
-	return nil
-}
-
-func deepCopy_api_LockList(in LockList, out *LockList, c *conversion.Cloner) error {
-	if err := deepCopy_api_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
-		return err
-	}
-	if err := deepCopy_api_ListMeta(in.ListMeta, &out.ListMeta, c); err != nil {
-		return err
-	}
-	if in.Items != nil {
-		out.Items = make([]Lock, len(in.Items))
-		for i := range in.Items {
-			if err := deepCopy_api_Lock(in.Items[i], &out.Items[i], c); err != nil {
-				return err
-			}
-		}
-	} else {
-		out.Items = nil
-	}
-	return nil
-}
-
-func deepCopy_api_LockSpec(in LockSpec, out *LockSpec, c *conversion.Cloner) error {
-	out.HeldBy = in.HeldBy
-	out.LeaseSeconds = in.LeaseSeconds
-	return nil
-}
-
-func deepCopy_api_LockStatus(in LockStatus, out *LockStatus, c *conversion.Cloner) error {
-	if err := deepCopy_util_Time(in.AcquiredTime, &out.AcquiredTime, c); err != nil {
-		return err
-	}
-	if err := deepCopy_util_Time(in.RenewTime, &out.RenewTime, c); err != nil {
-		return err
-	}
-	return nil
-}
-
 func deepCopy_api_NFSVolumeSource(in NFSVolumeSource, out *NFSVolumeSource, c *conversion.Cloner) error {
 	out.Server = in.Server
 	out.Path = in.Path
@@ -2243,10 +2191,6 @@ func init() {
 		deepCopy_api_LoadBalancerIngress,
 		deepCopy_api_LoadBalancerStatus,
 		deepCopy_api_LocalObjectReference,
-		deepCopy_api_Lock,
-		deepCopy_api_LockList,
-		deepCopy_api_LockSpec,
-		deepCopy_api_LockStatus,
 		deepCopy_api_NFSVolumeSource,
 		deepCopy_api_Namespace,
 		deepCopy_api_NamespaceList,

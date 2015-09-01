@@ -54,7 +54,7 @@ import (
 	endpointsetcd "k8s.io/kubernetes/pkg/registry/endpoint/etcd"
 	eventetcd "k8s.io/kubernetes/pkg/registry/event/etcd"
 	expcontrolleretcd "k8s.io/kubernetes/pkg/registry/experimental/controller/etcd"
-	locketcd "k8s.io/kubernetes/pkg/registry/lock/etcd"
+	locketcd "k8s.io/kubernetes/pkg/registry/experimental/lock/etcd"
 	limitrangeetcd "k8s.io/kubernetes/pkg/registry/limitrange/etcd"
 	"k8s.io/kubernetes/pkg/registry/minion"
 	nodeetcd "k8s.io/kubernetes/pkg/registry/minion/etcd"

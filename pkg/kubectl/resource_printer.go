@@ -1099,7 +1099,7 @@ func printThirdPartyResourceList(list *expapi.ThirdPartyResourceList, w io.Write
 	return nil
 }
 
-func printLock(lock *api.Lock, w io.Writer, withNamespace bool, wide bool, showAll bool, columnLabels []string) error {
+func printLock(lock *expapi.Lock, w io.Writer, withNamespace bool, wide bool, showAll bool, columnLabels []string) error {
 	namespace := lock.Namespace
 	if withNamespace {
 		if _, err := fmt.Fprintf(w, "%s\t", namespace); err != nil {
@@ -1119,7 +1119,7 @@ func printLock(lock *api.Lock, w io.Writer, withNamespace bool, wide bool, showA
 }
 
 // Sorts and prints the EventList in a human-friendly format.
-func printLockList(list *api.LockList, w io.Writer, withNamespace bool, wide bool, showAll bool, columnLabels []string) error {
+func printLockList(list *expapi.LockList, w io.Writer, withNamespace bool, wide bool, showAll bool, columnLabels []string) error {
 	for i := range list.Items {
 		if err := printLock(&list.Items[i], w, withNamespace, wide, showAll, columnLabels); err != nil {
 			return err

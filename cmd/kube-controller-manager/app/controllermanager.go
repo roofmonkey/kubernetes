@@ -173,6 +173,10 @@ func (s *CMServer) Run(_ []string) error {
 	if err != nil {
 		glog.Fatalf("Invalid API configuration: %v", err)
 	}
+	experimentalClient, err := client.NewExperimental(kubeconfig)
+	if err != nil {
+		glog.Fatalf("Invalid experimental API configuration: %v", err)
+	}
 
 	go func() {
 		mux := http.NewServeMux()
@@ -226,7 +230,7 @@ func (s *CMServer) Run(_ []string) error {
 	resourceQuotaController := resourcequotacontroller.NewResourceQuotaController(kubeClient)
 	resourceQuotaController.Run(s.ResourceQuotaSyncPeriod)
 
-	namespaceController := namespacecontroller.NewNamespaceController(kubeClient, s.NamespaceSyncPeriod)
+	namespaceController := namespacecontroller.NewNamespaceController(kubeClient, experimentalClient, s.NamespaceSyncPeriod)
 	namespaceController.Run()
 
 	pvclaimBinder := volumeclaimbinder.NewPersistentVolumeClaimBinder(kubeClient, s.PVClaimBinderSyncPeriod)

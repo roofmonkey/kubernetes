@@ -21,7 +21,8 @@ import (
 	"time"
 
 	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/validation"
+	"k8s.io/kubernetes/pkg/expapi/validation"
+	"k8s.io/kubernetes/pkg/expapi"
 	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/registry/generic"
@@ -59,28 +60,28 @@ func (lockStrategy) AllowCreateOnUpdate() bool {
 }
 
 func (lockStrategy) PrepareForCreate(obj runtime.Object) {
-	lock := obj.(*api.Lock)
+	lock := obj.(*expapi.Lock)
 	lock.Status.AcquiredTime = util.NewTime(time.Now())
 	lock.Status.RenewTime = lock.Status.AcquiredTime
 }
 
 func (lockStrategy) PrepareForUpdate(obj, old runtime.Object) {
-	lock := obj.(*api.Lock)
-	oldLock := old.(*api.Lock)
+	lock := obj.(*expapi.Lock)
+	oldLock := old.(*expapi.Lock)
 	lock.Status.RenewTime = util.NewTime(time.Now())
 	lock.Status.AcquiredTime = oldLock.Status.AcquiredTime
 }
 
 // Validate validates a new lock.
 func (lockStrategy) Validate(ctx api.Context, obj runtime.Object) fielderrors.ValidationErrorList {
-	lock := obj.(*api.Lock)
+	lock := obj.(*expapi.Lock)
 	return validation.ValidateLock(lock)
 }
 
 // ValidateUpdate validates an update to a lock.
 func (lockStrategy) ValidateUpdate(ctx api.Context, obj, old runtime.Object) fielderrors.ValidationErrorList {
-	lock := obj.(*api.Lock)
-	oldLock := old.(*api.Lock)
+	lock := obj.(*expapi.Lock)
+	oldLock := old.(*expapi.Lock)
 	errs := validation.ValidateLock(lock)
 	if lock.Spec.HeldBy != oldLock.Spec.HeldBy {
 		errs = append(errs, fmt.Errorf("Lock %s is held by %s but attempted to be updated by %s", lock.Name, oldLock.Spec.HeldBy, lock.Spec.HeldBy))
@@ -96,7 +97,7 @@ func (lockStrategy) AllowUnconditionalUpdate() bool {
 }
 
 // LockToSelectableFields returns a label set that represents the object.
-func LockToSelectableFields(lock *api.Lock) fields.Set {
+func LockToSelectableFields(lock *expapi.Lock) fields.Set {
 	return fields.Set{
 		"metadata.name":        lock.Name,
 		"spec.heldBy":          lock.Spec.HeldBy,
@@ -114,7 +115,7 @@ func MatchLock(label labels.Selector, field fields.Selector) generic.Matcher {
 		Label: label,
 		Field: field,
 		GetAttrs: func(obj runtime.Object) (labels.Set, fields.Set, error) {
-			rc, ok := obj.(*api.Lock)
+			rc, ok := obj.(*expapi.Lock)
 			if !ok {
 				return nil, nil, fmt.Errorf("Given object is not a lock.")
 			}

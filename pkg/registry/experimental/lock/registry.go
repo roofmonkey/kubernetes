@@ -19,6 +19,7 @@ package lock
 import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/rest"
+	"k8s.io/kubernetes/pkg/expapi"
 	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/watch"
@@ -27,15 +28,15 @@ import (
 // Registry is an interface implemented by things that know how to store Lock objects.
 type Registry interface {
 	// ListLocks obtains a list of locks having labels which match selector.
-	ListLocks(ctx api.Context, selector labels.Selector) (*api.LockList, error)
+	ListLocks(ctx api.Context, selector labels.Selector) (*expapi.LockList, error)
 	// Watch for new/changed/deleted locks
 	WatchLocks(ctx api.Context, label labels.Selector, field fields.Selector, resourceVersion string) (watch.Interface, error)
 	// Get a specific lock
-	GetLock(ctx api.Context, lockName string) (*api.Lock, error)
+	GetLock(ctx api.Context, lockName string) (*expapi.Lock, error)
 	// Create a lock based on a specification.
-	CreateLock(ctx api.Context, lock *api.Lock) error
+	CreateLock(ctx api.Context, lock *expapi.Lock) error
 	// Update an existing lock
-	UpdateLock(ctx api.Context, lock *api.Lock) error
+	UpdateLock(ctx api.Context, lock *expapi.Lock) error
 	// Delete an existing lock
 	DeleteLock(ctx api.Context, lockName string) error
 }
@@ -50,32 +51,32 @@ func NewRegistry(s rest.StandardStorage) Registry {
 	return &storage{s}
 }
 
-func (s *storage) ListLocks(ctx api.Context, label labels.Selector) (*api.LockList, error) {
+func (s *storage) ListLocks(ctx api.Context, label labels.Selector) (*expapi.LockList, error) {
 	obj, err := s.List(ctx, label, fields.Everything())
 	if err != nil {
 		return nil, err
 	}
-	return obj.(*api.LockList), nil
+	return obj.(*expapi.LockList), nil
 }
 
 func (s *storage) WatchLocks(ctx api.Context, label labels.Selector, field fields.Selector, resourceVersion string) (watch.Interface, error) {
 	return s.Watch(ctx, label, field, resourceVersion)
 }
 
-func (s *storage) GetLock(ctx api.Context, lockName string) (*api.Lock, error) {
+func (s *storage) GetLock(ctx api.Context, lockName string) (*expapi.Lock, error) {
 	obj, err := s.Get(ctx, lockName)
 	if err != nil {
 		return nil, err
 	}
-	return obj.(*api.Lock), nil
+	return obj.(*expapi.Lock), nil
 }
 
-func (s *storage) CreateLock(ctx api.Context, lockName *api.Lock) error {
+func (s *storage) CreateLock(ctx api.Context, lockName *expapi.Lock) error {
 	_, err := s.Create(ctx, lockName)
 	return err
 }
 
-func (s *storage) UpdateLock(ctx api.Context, lockName *api.Lock) error {
+func (s *storage) UpdateLock(ctx api.Context, lockName *expapi.Lock) error {
 	_, _, err := s.Update(ctx, lockName)
 	return err
 }

@@ -395,12 +395,12 @@ func deletePersistentVolumeClaims(kubeClient client.Interface, ns string) error 
 }
 
 func deleteLocks(kubeClient client.Interface, ns string) error {
-	items, err := kubeClient.Locks(ns).List(labels.Everything())
+	items, err := kubeClient.Experimental().Locks(ns).List(labels.Everything())
 	if err != nil {
 		return err
 	}
 	for i := range items.Items {
-		err := kubeClient.Locks(ns).Delete(items.Items[i].Name)
+		err := kubeClient.Experimental().Locks(ns).Delete(items.Items[i].Name)
 		if err != nil && !errors.IsNotFound(err) {
 			return err
 		}

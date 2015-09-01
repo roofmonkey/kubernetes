@@ -19,10 +19,11 @@ package etcd
 import (
 
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/expapi"
 	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/labels"
+	"k8s.io/kubernetes/pkg/registry/experimental/lock"
 	"k8s.io/kubernetes/pkg/registry/generic"
-	"k8s.io/kubernetes/pkg/registry/lock"
 	etcdgeneric "k8s.io/kubernetes/pkg/registry/generic/etcd"
 	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/storage"
@@ -38,8 +39,8 @@ func NewStorage(s storage.Interface) *REST {
 	prefix := "/locks"
 
 	store := &etcdgeneric.Etcd{
-		NewFunc:      func() runtime.Object { return &api.Lock{} },
-		NewListFunc:  func() runtime.Object { return &api.LockList{} },
+		NewFunc:      func() runtime.Object { return &expapi.Lock{} },
+		NewListFunc:  func() runtime.Object { return &expapi.LockList{} },
 		EndpointName: "locks",
 		KeyRootFunc: func(ctx api.Context) string {
 			return etcdgeneric.NamespaceKeyRootFunc(ctx, prefix)
@@ -48,11 +49,11 @@ func NewStorage(s storage.Interface) *REST {
 			return etcdgeneric.NamespaceKeyFunc(ctx, prefix, name)
 		},
 		ObjectNameFunc: func(obj runtime.Object) (string, error) {
-			return obj.(*api.Lock).Name, nil
+			return obj.(*expapi.Lock).Name, nil
 		},
 		Storage: s,
 		TTLFunc: func(obj runtime.Object, existin uint64, update bool) (uint64, error) {
-			return obj.(*api.Lock).Spec.LeaseSeconds, nil
+			return obj.(*expapi.Lock).Spec.LeaseSeconds, nil
 		},
 		PredicateFunc: func(label labels.Selector, field fields.Selector) generic.Matcher {
 			return lock.MatchLock(label, field)

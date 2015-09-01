@@ -85,7 +85,7 @@ func TestSyncNamespaceThatIsTerminating(t *testing.T) {
 			Phase: api.NamespaceTerminating,
 		},
 	}
-	err := syncNamespace(mockClient, testNamespace)
+	err := syncNamespace(mockClient, mockClient, testNamespace)
 	if err != nil {
 		t.Errorf("Unexpected error when synching namespace %v", err)
 	}
@@ -124,7 +124,7 @@ func TestSyncNamespaceThatIsActive(t *testing.T) {
 			Phase: api.NamespaceActive,
 		},
 	}
-	err := syncNamespace(mockClient, testNamespace)
+	err := syncNamespace(mockClient, mockClient, testNamespace)
 	if err != nil {
 		t.Errorf("Unexpected error when synching namespace %v", err)
 	}

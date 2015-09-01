@@ -21,7 +21,8 @@ import (
 	"testing"
 
 	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/testapi"
+	"k8s.io/kubernetes/pkg/expapi"
+	"k8s.io/kubernetes/pkg/expapi/testapi"
 	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/labels"
 )
@@ -32,11 +33,11 @@ func getLocksResourceName() string {
 
 func TestLockCreate(t *testing.T) {
 	ns := api.NamespaceDefault
-	lock := &api.Lock{
+	lock := &expapi.Lock{
 		ObjectMeta: api.ObjectMeta{
 			Name: "aprocess",
 		},
-		Spec: api.LockSpec{
+		Spec: expapi.LockSpec{
 			HeldBy: "app1",
 			LeaseSeconds: 30,
 		},
@@ -58,11 +59,11 @@ func TestLockCreate(t *testing.T) {
 func TestLockGet(t *testing.T) {
 	name := "aprocess"
 	ns := api.NamespaceDefault
-	lock := &api.Lock{
+	lock := &expapi.Lock{
 		ObjectMeta: api.ObjectMeta{
 			Name: name,
 		},
-		Spec: api.LockSpec{
+		Spec: expapi.LockSpec{
 			HeldBy: "app1",
 			LeaseSeconds: 30,
 		},
@@ -84,8 +85,8 @@ func TestLockGet(t *testing.T) {
 func TestLockList(t *testing.T) {
 	ns := api.NamespaceDefault
 
-	lockList := &api.LockList{
-		Items: []api.Lock{
+	lockList := &expapi.LockList{
+		Items: []expapi.Lock{
 			{
 				ObjectMeta: api.ObjectMeta{Name: "aprocess"},
 			},
@@ -106,11 +107,11 @@ func TestLockList(t *testing.T) {
 
 func TestLockUpdate(t *testing.T) {
 	ns := api.NamespaceDefault
-	lock := &api.Lock{
+	lock := &expapi.Lock{
 		ObjectMeta: api.ObjectMeta{
 			Name:            "aprocess",
 		},
-		Spec: api.LockSpec{
+		Spec: expapi.LockSpec{
 			HeldBy: "app1",
 			LeaseSeconds: 30,
 		},
@@ -137,7 +138,7 @@ func TestLockWatch(t *testing.T) {
 	c := &testClient{
 		Request: testRequest{
 			Method: "GET",
-			Path:   "/api/" + testapi.Version() + "/watch/" + getLocksResourceName(),
+			Path:   testapi.ResourcePathWithPrefix("watch", getLocksResourceName(), api.NamespaceAll, ""),
 			Query:  url.Values{"name": []string{}}},
 		Response: Response{StatusCode: 200},
 	}

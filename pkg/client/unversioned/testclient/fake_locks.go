@@ -17,7 +17,7 @@ limitations under the License.
 package testclient
 
 import (
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/expapi"
 	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/watch"
@@ -30,40 +30,40 @@ type FakeLocks struct {
 	Namespace string
 }
 
-func (c *FakeLocks) Create(lock *api.Lock) (*api.Lock, error) {
+func (c *FakeLocks) Create(lock *expapi.Lock) (*expapi.Lock, error) {
 	obj, err := c.Fake.Invokes(NewCreateAction("locks", c.Namespace, lock), lock)
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*api.Lock), err
+	return obj.(*expapi.Lock), err
 }
 
-func (c *FakeLocks) List(label labels.Selector) (*api.LockList, error) {
-	obj, err := c.Fake.Invokes(NewListAction("locks", c.Namespace, label, nil), &api.LockList{})
+func (c *FakeLocks) List(label labels.Selector) (*expapi.LockList, error) {
+	obj, err := c.Fake.Invokes(NewListAction("locks", c.Namespace, label, nil), &expapi.LockList{})
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*api.LockList), err
+	return obj.(*expapi.LockList), err
 }
 
-func (c *FakeLocks) Get(name string) (*api.Lock, error) {
-	obj, err := c.Fake.Invokes(NewGetAction("locks", c.Namespace, name), &api.Lock{})
+func (c *FakeLocks) Get(name string) (*expapi.Lock, error) {
+	obj, err := c.Fake.Invokes(NewGetAction("locks", c.Namespace, name), &expapi.Lock{})
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*api.Lock), err
+	return obj.(*expapi.Lock), err
 }
 
-func (c *FakeLocks) Update(lock *api.Lock) (*api.Lock, error) {
+func (c *FakeLocks) Update(lock *expapi.Lock) (*expapi.Lock, error) {
 	obj, err := c.Fake.Invokes(NewUpdateAction("locks", c.Namespace, lock), lock)
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*api.Lock), err
+	return obj.(*expapi.Lock), err
 }
 
 func (c *FakeLocks) Delete(name string) error {
-	_, err := c.Fake.Invokes(NewDeleteAction("locks", c.Namespace, name), &api.Lock{})
+	_, err := c.Fake.Invokes(NewDeleteAction("locks", c.Namespace, name), &expapi.Lock{})
 	return err
 }
 

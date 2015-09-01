@@ -29,6 +29,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/resource"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
+	"k8s.io/kubernetes/pkg/expapi"
 	"k8s.io/kubernetes/pkg/fieldpath"
 	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/labels"
@@ -78,7 +79,6 @@ func describerMap(c *client.Client) map[string]Describer {
 		"PersistentVolume":      &PersistentVolumeDescriber{c},
 		"PersistentVolumeClaim": &PersistentVolumeClaimDescriber{c},
 		"Namespace":             &NamespaceDescriber{c},
-		"Lock":                  &LockDescriber{c},
 	}
 	return m
 }
@@ -87,6 +87,10 @@ func expDescriberMap(c *client.Client, exp *client.ExperimentalClient) map[strin
 	return map[string]Describer{
 		"HorizontalPodAutoscaler": &HorizontalPodAutoscalerDescriber{
 			client:       c,
+			experimental: exp,
+		},
+		"Lock": &LockDescriber{
+			client: c,
 			experimental: exp,
 		},
 	}
@@ -1461,12 +1465,13 @@ func (fn typeFunc) Describe(exact interface{}, extra ...interface{}) (string, er
 
 // LockDescriber generates information about a lock
 type LockDescriber struct {
-	client.Interface
+        client       *client.Client
+        experimental *client.ExperimentalClient
 }
 
 func (d *LockDescriber) Describe(namespace, name string) (string, error) {
 
-	lock, err := d.Locks(namespace).Get(name)
+	lock, err := d.experimental.Locks(namespace).Get(name)
 
 	if err != nil {
 		return "", err
@@ -1474,7 +1479,7 @@ func (d *LockDescriber) Describe(namespace, name string) (string, error) {
 	return describeLock(lock)
 }
 
-func describeLock(lock *api.Lock) (string, error) {
+func describeLock(lock *expapi.Lock) (string, error) {
 	return tabbedString(func(out io.Writer) error {
 		fmt.Fprintf(out, "Name:\t%s\n", lock.Name)
 		fmt.Fprintf(out, "Namespace:\t%s\n", lock.Namespace)

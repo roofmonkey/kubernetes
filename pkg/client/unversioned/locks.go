@@ -17,7 +17,7 @@ limitations under the License.
 package unversioned
 
 import (
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/expapi"
 	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/watch"
@@ -30,22 +30,22 @@ type LockNamespacer interface {
 
 // LockInterface has methods to work with Lock resources.
 type LockInterface interface {
-	List(selector labels.Selector) (*api.LockList, error)
-	Get(name string) (*api.Lock, error)
+	List(selector labels.Selector) (*expapi.LockList, error)
+	Get(name string) (*expapi.Lock, error)
 	Delete(name string) error
-	Create(limitRange *api.Lock) (*api.Lock, error)
-	Update(limitRange *api.Lock) (*api.Lock, error)
+	Create(limitRange *expapi.Lock) (*expapi.Lock, error)
+	Update(limitRange *expapi.Lock) (*expapi.Lock, error)
 	Watch(label labels.Selector, field fields.Selector, resourceVersion string) (watch.Interface, error)
 }
 
 // locks implements LockNamespacer interface
 type locks struct {
-	r  *Client
+	r  *ExperimentalClient
 	ns string
 }
 
 // NewLocks returns a lock
-func newLocks(c *Client, namespace string) *locks {
+func newLocks(c *ExperimentalClient, namespace string) *locks {
 	return &locks{
 		r:  c,
 		ns: namespace,
@@ -53,15 +53,15 @@ func newLocks(c *Client, namespace string) *locks {
 }
 
 // List takes a selector, and returns the list of locks that match that selector.
-func (c *locks) List(selector labels.Selector) (result *api.LockList, err error) {
-	result = &api.LockList{}
+func (c *locks) List(selector labels.Selector) (result *expapi.LockList, err error) {
+	result = &expapi.LockList{}
 	err = c.r.Get().Namespace(c.ns).Resource("locks").LabelsSelectorParam(selector).Do().Into(result)
 	return
 }
 
 // Get takes the name of the lock, and returns the corresponding Lock object, and an error if it occurs
-func (c *locks) Get(name string) (result *api.Lock, err error) {
-	result = &api.Lock{}
+func (c *locks) Get(name string) (result *expapi.Lock, err error) {
+	result = &expapi.Lock{}
 	err = c.r.Get().Namespace(c.ns).Resource("locks").Name(name).Do().Into(result)
 	return
 }
@@ -72,15 +72,16 @@ func (c *locks) Delete(name string) error {
 }
 
 // Create takes the representation of a lock.  Returns the server's representation of the lock, and an error, if it occurs.
-func (c *locks) Create(lock *api.Lock) (result *api.Lock, err error) {
-	result = &api.Lock{}
+func (c *locks) Create(lock *expapi.Lock) (result *expapi.Lock, err error) {
+	result = &expapi.Lock{}
 	err = c.r.Post().Namespace(c.ns).Resource("locks").Body(lock).Do().Into(result)
+
 	return
 }
 
 // Update takes the representation of a lock to update.  Returns the server's representation of the lock, and an error, if it occurs.
-func (c *locks) Update(lock *api.Lock) (result *api.Lock, err error) {
-	result = &api.Lock{}
+func (c *locks) Update(lock *expapi.Lock) (result *expapi.Lock, err error) {
+	result = &expapi.Lock{}
 	err = c.r.Put().Namespace(c.ns).Resource("locks").Name(lock.Name).Body(lock).Do().Into(result)
 	return
 }
