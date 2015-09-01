@@ -183,7 +183,7 @@ func NewFactory(optionalClientConfig clientcmd.ClientConfig) *Factory {
 			if err != nil {
 				return nil, err
 			}
-			if describer, ok := kubectl.DescriberFor(mapping.Kind, client, expClient); ok {
+			if describer, ok := kubectl.DescriberFor(mapping.Kind, client); ok {
 				return describer, nil
 			}
 			return nil, fmt.Errorf("no description has been implemented for %q", mapping.Kind)

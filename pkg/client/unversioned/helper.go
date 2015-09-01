@@ -143,7 +143,7 @@ func New(c *Config) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{client, experimentalClient}, nil
+	return &Client{RESTClient: client, experimental: experimentalClient}, nil
 }
 
 // MatchesServerVersion queries the server to compares the build version
