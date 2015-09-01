@@ -179,7 +179,7 @@ func NewFactory(optionalClientConfig clientcmd.ClientConfig) *Factory {
 			if err != nil {
 				return nil, err
 			}
-			client, expClient, err := getBothClients(group, mapping.APIVersion)
+			client, _, err := getBothClients(group, mapping.APIVersion)
 			if err != nil {
 				return nil, err
 			}
