@@ -89,10 +89,7 @@ func expDescriberMap(c *client.Client, exp *client.ExperimentalClient) map[strin
 			client:       c,
 			experimental: exp,
 		},
-		"Lock": &LockDescriber{
-			client: c,
-			experimental: exp,
-		},
+		"Lock": &LockDescriber{c},
 	}
 }
 
@@ -135,6 +132,7 @@ func init() {
 		describeReplicationController,
 		describeNode,
 		describeNamespace,
+		describeLock,
 	)
 	if err != nil {
 		glog.Fatalf("Cannot register describers: %v", err)
@@ -1466,12 +1464,10 @@ func (fn typeFunc) Describe(exact interface{}, extra ...interface{}) (string, er
 // LockDescriber generates information about a lock
 type LockDescriber struct {
         client       *client.Client
-        experimental *client.ExperimentalClient
 }
 
 func (d *LockDescriber) Describe(namespace, name string) (string, error) {
-
-	lock, err := d.experimental.Locks(namespace).Get(name)
+	lock, err := d.client.Experimental().Locks(namespace).Get(name)
 
 	if err != nil {
 		return "", err
