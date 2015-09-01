@@ -34,7 +34,8 @@ type Interface interface {
 	PodTemplatesNamespacer
 	ReplicationControllersNamespacer
 	ServicesNamespacer
-	EndpointsNamespacer VersionInterface
+	EndpointsNamespacer
+	VersionInterface
 	NodesInterface
 	EventNamespacer
 	LimitRangesNamespacer
