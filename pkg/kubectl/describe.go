@@ -103,16 +103,17 @@ func DescribableResources() []string {
 
 // Describer returns the default describe functions for each of the standard
 // Kubernetes types.
-func DescriberFor(kind string, c *client.Client) (Describer, bool) {
+func DescriberFor(group string, kind string, c *client.Client) (Describer, bool) {
 	var f Describer
 	var ok bool
 
-	if c != nil {
+	switch group {
+	case "api":
 		f, ok = describerMap(c)[kind]
-	}
-	if !ok && c != nil {
+	case "experimental":
 		f, ok = expDescriberMap(c)[kind]
 	}
+
 	return f, ok
 }
 
