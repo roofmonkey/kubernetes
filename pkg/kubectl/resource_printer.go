@@ -341,7 +341,7 @@ var persistentVolumeClaimColumns = []string{"NAME", "LABELS", "STATUS", "VOLUME"
 var componentStatusColumns = []string{"NAME", "STATUS", "MESSAGE", "ERROR"}
 var thirdPartyResourceColumns = []string{"NAME", "DESCRIPTION", "VERSION(S)"}
 var withNamespacePrefixColumns = []string{"NAMESPACE"} // TODO(erictune): print cluster name too.
-var lockColumns = []string{"NAME", "HELDBY", "RENEWED"}
+var lockColumns = []string{"NAME", "HELDBY", "LAST_RENEWED", "AGE"}
 
 // addDefaultHandlers adds print handlers for default Kubernetes types.
 func (h *HumanReadablePrinter) addDefaultHandlers() {
@@ -1107,10 +1107,11 @@ func printLock(lock *expapi.Lock, w io.Writer, withNamespace bool, wide bool, sh
 		}
 	}
 	if _, err := fmt.Fprintf(
-		w, "%s\t%s\t%s\t",
+		w, "%s\t%s\t%s\t%s",
 		lock.Name,
 		lock.Spec.HeldBy,
 		lock.Status.LastRenewalTime,
+		translateTimestamp(lock.CreationTimestamp),
 	); err != nil {
 		return err
 	}
