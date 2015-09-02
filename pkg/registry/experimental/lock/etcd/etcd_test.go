@@ -109,14 +109,14 @@ func TestRESTCreate(t *testing.T) {
 		if c.(*expapi.Lock).Status.AcquiredTime.IsZero() == true {
 			t.Fatalf("Lock doesn't have an acquired time set")
 		}
-		if c.(*expapi.Lock).Status.RenewTime.IsZero() == true {
+		if c.(*expapi.Lock).Status.LastRenewalTime.IsZero() == true {
 			t.Fatalf("Lock doesn't have a renew time set")
 		}
 		if len(c.(*expapi.Lock).Status.AcquiredTime.String()) == 0 {
 			t.Errorf("AcquiredTime for lock is empty")
 		}
-		if c.(*expapi.Lock).Status.AcquiredTime != c.(*expapi.Lock).Status.RenewTime {
-			t.Errorf("AcquiredTime for lock does not match RenewTime")
+		if c.(*expapi.Lock).Status.AcquiredTime != c.(*expapi.Lock).Status.LastRenewalTime {
+			t.Errorf("AcquiredTime for lock does not match LastRenewalTime")
 		}
 	}
 }
@@ -142,7 +142,7 @@ func TestRESTUpdate(t *testing.T) {
 	}
 
 	atime := lock.Status.AcquiredTime
-	rtime := lock.Status.RenewTime
+	rtime := lock.Status.LastRenewalTime
 	lockSpec.ResourceVersion = lock.ResourceVersion
 	update, _, err := rest.Update(api.NewDefaultContext(), lockSpec)
 	if err != nil {
@@ -151,7 +151,7 @@ func TestRESTUpdate(t *testing.T) {
 	if update.(*expapi.Lock).Status.AcquiredTime.IsZero() == true {
 		t.Fatalf("Updated lock doesn't have an acquired time set")
 	}
-	if update.(*expapi.Lock).Status.RenewTime.IsZero() == true {
+	if update.(*expapi.Lock).Status.LastRenewalTime.IsZero() == true {
 		t.Fatalf("Updated lock doesn't have a renew time set")
 	}
 	got2, err := rest.Get(api.NewDefaultContext(), lockSpec.Name)
@@ -164,10 +164,10 @@ func TestRESTUpdate(t *testing.T) {
 	if atime != got2.(*expapi.Lock).Status.AcquiredTime {
 		t.Fatalf("Lock acquired time changed from %s to %s", atime, got2.(*expapi.Lock).Status.AcquiredTime)
 	}
-	if got2.(*expapi.Lock).Status.RenewTime.IsZero() == true {
+	if got2.(*expapi.Lock).Status.LastRenewalTime.IsZero() == true {
 		t.Fatalf("lock gotten after update doesn't have a renew time set")
 	}
-	if rtime == got2.(*expapi.Lock).Status.RenewTime {
+	if rtime == got2.(*expapi.Lock).Status.LastRenewalTime {
 		t.Fatalf("Lock renew time did not change from %s", rtime)
 	}
 }
@@ -305,7 +305,7 @@ func TestRESTWatch(t *testing.T) {
 		},
 		Status: expapi.LockStatus{
 			AcquiredTime:    util.NewTime(time.Now()),
-			RenewTime:       util.NewTime(time.Now()),
+			LastRenewalTime:       util.NewTime(time.Now()),
 		},
 	}
 	lockBytes, _ := latest.Codec.Encode(lockA)

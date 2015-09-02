@@ -961,7 +961,7 @@ func deepCopy_expapi_LockStatus(in LockStatus, out *LockStatus, c *conversion.Cl
 	if err := deepCopy_util_Time(in.AcquiredTime, &out.AcquiredTime, c); err != nil {
 		return err
 	}
-	if err := deepCopy_util_Time(in.RenewTime, &out.RenewTime, c); err != nil {
+	if err := deepCopy_util_Time(in.LastRenewalTime, &out.LastRenewalTime, c); err != nil {
 		return err
 	}
 	return nil

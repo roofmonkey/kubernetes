@@ -331,7 +331,7 @@ type LockStatus struct {
 	// When the lock was first acquired.
 	AcquiredTime util.Time `json:"acquiredTime,omitempty"`
 	// When the lock was last renewed.
-	RenewTime util.Time `json:"renewTime,omitempty"`
+	LastRenewalTime util.Time `json:"lastRenewalTime,omitempty"`
 }
 
 // Lock represents the configuration of a resource lock.

@@ -327,7 +327,7 @@ type LockSpec struct {
 
 type LockStatus struct {
 	AcquiredTime util.Time `json:"acquiredTime,omitempty" description:"When the lock was first acquired by the current owner"`
-	RenewTime    util.Time `json:"renewTime,omitempty" description:"The last time the lock's lease was updated"`
+	LastRenewalTime    util.Time `json:"lastRenewalTime,omitempty" description:"The last time the lock's lease was updated"`
 }
 
 // Lock represents the configuration of a resource lock.
