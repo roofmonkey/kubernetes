@@ -1686,7 +1686,7 @@ func convert_expapi_LockStatus_To_v1_LockStatus(in *expapi.LockStatus, out *Lock
 	if err := s.Convert(&in.AcquiredTime, &out.AcquiredTime, 0); err != nil {
 		return err
 	}
-	if err := s.Convert(&in.RenewTime, &out.RenewTime, 0); err != nil {
+	if err := s.Convert(&in.LastRenewalTime, &out.LastRenewalTime, 0); err != nil {
 		return err
 	}
 	return nil
@@ -2113,7 +2113,7 @@ func convert_v1_LockStatus_To_expapi_LockStatus(in *LockStatus, out *expapi.Lock
 	if err := s.Convert(&in.AcquiredTime, &out.AcquiredTime, 0); err != nil {
 		return err
 	}
-	if err := s.Convert(&in.RenewTime, &out.RenewTime, 0); err != nil {
+	if err := s.Convert(&in.LastRenewalTime, &out.LastRenewalTime, 0); err != nil {
 		return err
 	}
 	return nil

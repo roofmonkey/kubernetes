@@ -62,13 +62,13 @@ func (lockStrategy) AllowCreateOnUpdate() bool {
 func (lockStrategy) PrepareForCreate(obj runtime.Object) {
 	lock := obj.(*expapi.Lock)
 	lock.Status.AcquiredTime = util.NewTime(time.Now())
-	lock.Status.RenewTime = lock.Status.AcquiredTime
+	lock.Status.LastRenewalTime = lock.Status.AcquiredTime
 }
 
 func (lockStrategy) PrepareForUpdate(obj, old runtime.Object) {
 	lock := obj.(*expapi.Lock)
 	oldLock := old.(*expapi.Lock)
-	lock.Status.RenewTime = util.NewTime(time.Now())
+	lock.Status.LastRenewalTime = util.NewTime(time.Now())
 	lock.Status.AcquiredTime = oldLock.Status.AcquiredTime
 }
 
@@ -103,7 +103,7 @@ func LockToSelectableFields(lock *expapi.Lock) fields.Set {
 		"spec.heldBy":          lock.Spec.HeldBy,
 		"spec.leaseSeconds":    string(lock.Spec.LeaseSeconds),
 		"status.acquiredTime":    lock.Status.AcquiredTime.String(),
-		"status.renewTime":       lock.Status.RenewTime.String(),
+		"status.renewTime":       lock.Status.LastRenewalTime.String(),
 	}
 }
 

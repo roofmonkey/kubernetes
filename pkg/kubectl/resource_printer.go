@@ -1110,7 +1110,7 @@ func printLock(lock *expapi.Lock, w io.Writer, withNamespace bool, wide bool, sh
 		w, "%s\t%s\t%s\t",
 		lock.Name,
 		lock.Spec.HeldBy,
-		lock.Status.RenewTime,
+		lock.Status.LastRenewalTime,
 	); err != nil {
 		return err
 	}

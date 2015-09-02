@@ -1482,7 +1482,7 @@ func describeLock(lock *expapi.Lock) (string, error) {
 		fmt.Fprintf(out, "HeldBy:\t%s\n", lock.Spec.HeldBy)
 		fmt.Fprintf(out, "LeaseSeconds:\t%d\n", lock.Spec.LeaseSeconds)
 		fmt.Fprintf(out, "AcquiredTime:\t%s\n", lock.Status.AcquiredTime.String())
-		fmt.Fprintf(out, "RenewTime:\t%s\n", lock.Status.RenewTime.String())
+		fmt.Fprintf(out, "LastRenewalTime:\t%s\n", lock.Status.LastRenewalTime.String())
 		return nil
 	})
 }
